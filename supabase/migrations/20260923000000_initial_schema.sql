@@ -1,4 +1,4 @@
--- Migration: Initial Schema for IBETC 2026 Platform (Build 1 Foundation)
+-- Migration: Initial Schema for IBETC 2026 Platform (Build 1 & 2 Core System)
 -- Date: 2026-09-23
 
 -- Enable UUID extension
@@ -81,7 +81,6 @@ CREATE TABLE IF NOT EXISTS public.scores (
 -- ============================================================================
 
 -- Ensure one active submission per participant (combination of full_name, email, phone excluding rejected submissions)
--- Prevents duplicate entries without incorrectly blocking siblings sharing an email address
 CREATE UNIQUE INDEX IF NOT EXISTS unique_active_participant_submission 
     ON public.submissions (LOWER(full_name), LOWER(email), LOWER(phone)) 
     WHERE status != 'rejected';
@@ -165,7 +164,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Secure Participant Access RPC: Fetch submission by ID + Secret Participant Key
+-- Admin Submissions Metrics RPC
+CREATE OR REPLACE FUNCTION public.get_admin_submission_stats()
+RETURNS TABLE (
+    total_count BIGINT,
+    pending_count BIGINT,
+    approved_count BIGINT,
+    rejected_count BIGINT,
+    hidden_count BIGINT
+) AS $$
+BEGIN
+    IF NOT public.is_staff(auth.uid()) THEN
+        RAISE EXCEPTION 'Access denied: Staff authorization required';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        COUNT(*)::BIGINT AS total_count,
+        COUNT(*) FILTER (WHERE status = 'pending')::BIGINT AS pending_count,
+        COUNT(*) FILTER (WHERE status = 'approved')::BIGINT AS approved_count,
+        COUNT(*) FILTER (WHERE status = 'rejected')::BIGINT AS rejected_count,
+        COUNT(*) FILTER (WHERE status = 'hidden')::BIGINT AS hidden_count
+    FROM public.submissions;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Secure Participant Access RPC
 CREATE OR REPLACE FUNCTION public.get_submission_by_participant_key(
     p_submission_id UUID,
     p_participant_key TEXT
@@ -227,7 +251,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Grant EXECUTE permissions on participant functions
+-- Grant EXECUTE permissions on RPC functions
+GRANT EXECUTE ON FUNCTION public.get_admin_submission_stats() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_submission_by_participant_key(UUID, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.associate_submission_with_account(UUID, TEXT) TO authenticated;
 
@@ -258,9 +283,7 @@ ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.judging_criteria ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.scores ENABLE ROW LEVEL SECURITY;
 
--- ----------------------------------------------------------------------------
 -- RLS: staff_users
--- ----------------------------------------------------------------------------
 CREATE POLICY "Staff can view staff user profiles"
     ON public.staff_users FOR SELECT
     TO authenticated
@@ -272,49 +295,39 @@ CREATE POLICY "Super admins manage staff users"
     USING (public.is_super_admin(auth.uid()))
     WITH CHECK (public.is_super_admin(auth.uid()));
 
--- ----------------------------------------------------------------------------
 -- RLS: submissions
--- ----------------------------------------------------------------------------
--- Public visitors can read approved submissions (Safety enforced via table policy & view)
 CREATE POLICY "Public can view approved submissions"
     ON public.submissions FOR SELECT
     TO anon, authenticated
     USING (status = 'approved');
 
--- Registered participants can view own submission linked to their user account
 CREATE POLICY "Account owners can view own submission"
     ON public.submissions FOR SELECT
     TO authenticated
     USING (owner_user_id IS NOT NULL AND owner_user_id = auth.uid());
 
--- Staff can view all submissions
 CREATE POLICY "Staff can view all submissions"
     ON public.submissions FOR SELECT
     TO authenticated
     USING (public.is_staff(auth.uid()));
 
--- Anyone (anon or authenticated) can submit a new debate entry with pending status
 CREATE POLICY "Anyone can submit debate entry"
     ON public.submissions FOR INSERT
     TO anon, authenticated
     WITH CHECK (status = 'pending');
 
--- Admins can update submission status & details
 CREATE POLICY "Admins can update submissions"
     ON public.submissions FOR UPDATE
     TO authenticated
     USING (public.is_admin_or_super(auth.uid()))
     WITH CHECK (public.is_admin_or_super(auth.uid()));
 
--- Super Admins can delete submissions
 CREATE POLICY "Super admins can delete submissions"
     ON public.submissions FOR DELETE
     TO authenticated
     USING (public.is_super_admin(auth.uid()));
 
--- ----------------------------------------------------------------------------
 -- RLS: judging_criteria
--- ----------------------------------------------------------------------------
 CREATE POLICY "Staff can view judging criteria"
     ON public.judging_criteria FOR SELECT
     TO authenticated
@@ -326,9 +339,7 @@ CREATE POLICY "Super admins manage judging criteria"
     USING (public.is_super_admin(auth.uid()))
     WITH CHECK (public.is_super_admin(auth.uid()));
 
--- ----------------------------------------------------------------------------
 -- RLS: scores
--- ----------------------------------------------------------------------------
 CREATE POLICY "Staff can view scores"
     ON public.scores FOR SELECT
     TO authenticated
@@ -354,22 +365,30 @@ CREATE POLICY "Super admins can delete scores"
     USING (public.is_super_admin(auth.uid()));
 
 -- ============================================================================
--- 7. PRIVATE VIDEO STORAGE BUCKET CONFIGURATION
+-- 7. PRIVATE VIDEO STORAGE BUCKET CONFIGURATION (STRENGTHENED SECURITY)
 -- ============================================================================
 
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('debate-videos', 'debate-videos', false)
 ON CONFLICT (id) DO UPDATE SET public = false;
 
--- Upload policy for video storage bucket (Anonymous/Student upload for submissions)
+-- Restricted upload policy for video storage bucket:
+-- Enforces bucket 'debate-videos' and target path structure 'submissions/*'
+DROP POLICY IF EXISTS "Anyone can upload debate video" ON storage.objects;
 CREATE POLICY "Anyone can upload debate video"
     ON storage.objects FOR INSERT
     TO anon, authenticated
-    WITH CHECK (bucket_id = 'debate-videos');
+    WITH CHECK (
+        bucket_id = 'debate-videos' 
+        AND name LIKE 'submissions/%'
+    );
 
--- Read policy for video storage bucket (Staff members only - public access is via server signed URLs)
+-- Read policy for video storage bucket (Staff members only; public access via signed URLs generated server-side)
+DROP POLICY IF EXISTS "Authorized staff access to debate videos" ON storage.objects;
 CREATE POLICY "Authorized staff access to debate videos"
     ON storage.objects FOR SELECT
     TO authenticated
-    USING (bucket_id = 'debate-videos' AND public.is_staff(auth.uid()));
-
+    USING (
+        bucket_id = 'debate-videos' 
+        AND public.is_staff(auth.uid())
+    );

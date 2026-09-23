@@ -9,7 +9,7 @@ export type Json =
 export type SubmissionStatus = 'pending' | 'approved' | 'rejected' | 'hidden';
 export type StaffRole = 'super_admin' | 'admin' | 'judge';
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       staff_users: {
@@ -37,6 +37,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       submissions: {
         Row: {
@@ -81,6 +82,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       judging_criteria: {
         Row: {
@@ -116,6 +118,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       scores: {
         Row: {
@@ -148,6 +151,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
     }
     Views: {
@@ -160,6 +164,7 @@ export interface Database {
           video_path: string
           created_at: string
         }
+        Relationships: []
       }
     }
     Functions: {
@@ -178,6 +183,16 @@ export interface Database {
       is_super_admin: {
         Args: { p_user_id?: string }
         Returns: boolean
+      }
+      get_admin_submission_stats: {
+        Args: Record<string, never>
+        Returns: {
+          total_count: number
+          pending_count: number
+          approved_count: number
+          rejected_count: number
+          hidden_count: number
+        }[]
       }
       get_submission_by_participant_key: {
         Args: { p_submission_id: string; p_participant_key: string }
@@ -203,6 +218,9 @@ export interface Database {
     Enums: {
       submission_status: SubmissionStatus
       staff_role: StaffRole
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
