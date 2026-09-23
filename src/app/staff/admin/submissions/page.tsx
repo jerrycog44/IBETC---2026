@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { formatDate } from '@/lib/utils/formatters';
 import { updateSubmissionStatusAction } from '@/app/actions/submissions';
+import { generateSubmissionsCSV } from '@/lib/utils/export-csv';
 import { SubmissionStatus } from '@/lib/supabase/database.types';
-import { Search, Filter, CheckCircle2, Clock, XCircle, EyeOff, Play, X, AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Search, Filter, CheckCircle2, XCircle, EyeOff, Play, X, AlertTriangle, ArrowLeft, RefreshCw, Download } from 'lucide-react';
 
 interface SubmissionItem {
   id: string;
@@ -106,6 +107,31 @@ export default function AdminSubmissionsPage() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (filteredSubmissions.length === 0) return;
+
+    const exportRows = filteredSubmissions.map((item) => ({
+      submissionId: item.id,
+      fullName: item.full_name,
+      school: item.school,
+      phone: item.phone,
+      email: item.email,
+      debateTopic: item.debate_topic,
+      status: item.status,
+      submittedAt: formatDate(item.created_at),
+    }));
+
+    const csvContent = generateSubmissionsCSV(exportRows);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `IBETC_2026_Submissions_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getStatusBadge = (status: SubmissionStatus) => {
     switch (status) {
       case 'approved':
@@ -131,13 +157,24 @@ export default function AdminSubmissionsPage() {
             <h1 className="text-2xl font-extrabold text-slate-900">Submissions Management</h1>
             <p className="text-xs text-slate-500">Review participant debate entries and manage public gallery status.</p>
           </div>
-          <button
-            onClick={fetchSubmissions}
-            className="px-3 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-medium transition-colors flex items-center space-x-1.5 self-start sm:self-auto"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </button>
+          <div className="flex items-center space-x-2 self-start sm:self-auto">
+            <button
+              onClick={handleExportCSV}
+              disabled={filteredSubmissions.length === 0}
+              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-xs font-medium transition-colors flex items-center space-x-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
+
+            <button
+              onClick={fetchSubmissions}
+              className="px-3 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-medium transition-colors flex items-center space-x-1.5"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
 
         {/* CONTROLS: SEARCH & STATUS TABS */}
@@ -179,12 +216,12 @@ export default function AdminSubmissionsPage() {
         {/* SUBMISSIONS TABLE */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           {isLoading ? (
-            <div className="p-12 text-center text-slate-500 text-xs flex items-center justify-center space-x-2">
+            <div className="p-12 text-center text-xs text-slate-500 flex items-center justify-center space-x-2">
               <RefreshCw className="w-4 h-4 animate-spin text-brand-600" />
               <span>Loading competition submissions...</span>
             </div>
           ) : filteredSubmissions.length === 0 ? (
-            <div className="p-12 text-center text-slate-500 text-xs">
+            <div className="p-12 text-center text-xs text-slate-500">
               No submissions found matching the criteria.
             </div>
           ) : (

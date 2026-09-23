@@ -12,6 +12,24 @@ export type StaffRole = 'super_admin' | 'admin' | 'judge';
 export type Database = {
   public: {
     Tables: {
+      system_settings: {
+        Row: {
+          key: string
+          value: Json
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          value: Json
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff_users: {
         Row: {
           id: string
@@ -182,6 +200,18 @@ export type Database = {
       }
       is_super_admin: {
         Args: { p_user_id?: string }
+        Returns: boolean
+      }
+      is_judging_open: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
+      toggle_judging_lock: {
+        Args: { p_open: boolean }
+        Returns: boolean
+      }
+      create_staff_user: {
+        Args: { p_user_id: string; p_full_name: string; p_email: string; p_role: StaffRole }
         Returns: boolean
       }
       get_admin_submission_stats: {
