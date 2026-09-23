@@ -229,19 +229,24 @@ export default function SubmitPage() {
   return (
     <main className="min-h-screen bg-[#f8f9fc]">
       {/* Page Header */}
-      <div className="bg-white border-b border-slate-100">
-        <div className="max-w-xl mx-auto px-4 py-5 flex items-center gap-4">
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-brand-600 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Home
-          </Link>
-          <div className="w-px h-4 bg-slate-200" />
-          <div className="flex items-center gap-2">
-            <Mic2 className="w-4 h-4 text-brand-600" />
-            <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">IBETC 2026</span>
+      <div className="bg-white border-b border-emerald-900/10 shadow-sm sticky top-0 z-20">
+        <div className="max-w-xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 hover:text-emerald-600 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Home
+            </Link>
+            <div className="w-px h-6 bg-emerald-900/15" />
+            <Link href="/" className="flex items-center gap-3">
+              <img src="/eygii-logo.png" alt="EYGII Logo" className="h-10 object-contain" />
+              <div className="text-left">
+                <span className="block text-xs font-black text-emerald-900 uppercase tracking-tight">EYGII — IBETC 2026</span>
+                <span className="block text-[10px] text-emerald-700 italic hidden sm:block">Reviving world integrity and moral values</span>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

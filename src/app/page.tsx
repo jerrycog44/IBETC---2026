@@ -7,7 +7,7 @@ export default function HomePage() {
       {/* ====================================================================
           HERO SECTION
           ==================================================================== */}
-      <section className="hero-bg relative flex flex-col items-center justify-center min-h-screen px-4 py-20 text-white text-center overflow-hidden">
+      <section className="hero-bg relative flex flex-col items-center justify-center min-h-screen px-4 py-16 text-white text-center overflow-hidden">
         {/* Animated Mesh Orbs */}
         <div className="mesh-orb mesh-orb-1" />
         <div className="mesh-orb mesh-orb-2" />
@@ -18,24 +18,36 @@ export default function HomePage() {
           className="absolute inset-0 pointer-events-none opacity-20"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(99,102,241,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.1) 1px, transparent 1px)',
+              'linear-gradient(rgba(16,185,129,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.15) 1px, transparent 1px)',
             backgroundSize: '40px 40px',
           }}
         />
 
         <div className="relative z-10 max-w-4xl mx-auto space-y-8">
-          {/* Eyebrow */}
+          {/* Logo Card */}
           <div className="animate-slide-up flex justify-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-xs font-semibold uppercase tracking-widest text-white/90">
-              <span className="w-2 h-2 rounded-full bg-gold-400 animate-bounce-subtle" />
-              Eloquent Youth Global Integrity Initiative
+            <div className="bg-white/95 backdrop-blur-md p-4 rounded-3xl border border-emerald-400/30 shadow-2xl shadow-emerald-950/50 inline-flex flex-col sm:flex-row items-center gap-4">
+              {/* Logo Image */}
+              <img
+                src="/eygii-logo.png"
+                alt="EYGII Logo"
+                className="h-16 sm:h-20 object-contain drop-shadow"
+              />
+              <div className="text-left border-t sm:border-t-0 sm:border-l border-emerald-900/15 pt-2 sm:pt-0 sm:pl-4">
+                <p className="text-emerald-800 font-black text-sm sm:text-base tracking-tight uppercase leading-tight font-display">
+                  Eloquent Youth &amp; Global Integrity (EYGII)
+                </p>
+                <p className="text-emerald-700 italic font-serif text-xs sm:text-sm mt-0.5">
+                  Motive: Reviving world integrity and moral values
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Title */}
           <div className="animate-slide-up animation-delay-100 space-y-2">
             <h1
-              className="text-5xl sm:text-6xl lg:text-7xl font-display font-black leading-[1.1] tracking-tight"
+              className="text-4xl sm:text-6xl lg:text-7xl font-display font-black leading-[1.1] tracking-tight"
             >
               <span className="block text-white">Ibadan Eloquent</span>
               <span className="block gradient-text-gold">Youth &amp; Teens</span>
@@ -45,7 +57,7 @@ export default function HomePage() {
 
           {/* Year Badge */}
           <div className="animate-slide-up animation-delay-200 flex justify-center">
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-emerald-950/60 backdrop-blur-md border border-emerald-400/30 shadow-lg">
               <Trophy className="w-5 h-5 text-gold-400" />
               <span className="text-2xl font-black text-white tracking-tight">IBETC 2026</span>
               <Trophy className="w-5 h-5 text-gold-400" />
@@ -53,7 +65,7 @@ export default function HomePage() {
           </div>
 
           {/* Subtitle */}
-          <p className="animate-slide-up animation-delay-300 text-lg sm:text-xl text-white/75 max-w-2xl mx-auto leading-relaxed">
+          <p className="animate-slide-up animation-delay-300 text-lg sm:text-xl text-emerald-100/90 max-w-2xl mx-auto leading-relaxed font-medium">
             The premier annual debate competition for youth and teens across Nigeria.
             Submit your video entry, track your status, and compete for excellence.
           </p>
@@ -65,8 +77,8 @@ export default function HomePage() {
               Submit Your Entry
               <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/gallery" className="btn-outline border-white/30 text-white hover:bg-white/10 hover:border-white/50 w-full sm:w-auto text-base px-8 py-4">
-              <Star className="w-4 h-4" />
+            <Link href="/gallery" className="btn-outline border-emerald-400/40 text-emerald-100 hover:bg-emerald-900/40 hover:border-emerald-400 w-full sm:w-auto text-base px-8 py-4">
+              <Star className="w-4 h-4 text-gold-400" />
               View Approved Entries
             </Link>
           </div>
