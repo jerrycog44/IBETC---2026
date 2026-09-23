@@ -4,7 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { formatDate } from '@/lib/utils/formatters';
-import { Search, CheckCircle2, Clock, Play, RefreshCw, Lock } from 'lucide-react';
+import {
+  Search, CheckCircle2, Clock, Play, RefreshCw, Lock,
+  Trophy, FileText, LogOut, BarChart2, Mic2
+} from 'lucide-react';
 
 interface JudgeSubmissionItem {
   id: string;
@@ -26,169 +29,243 @@ export default function JudgeDashboardPage() {
     setIsLoading(true);
     const supabase = createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Check judging lock status
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: lockOpen } = await (supabase as any).rpc('is_judging_open');
     setIsJudgingOpen(lockOpen !== false);
 
-    // Query approved submissions available for judging
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: subData } = await (supabase.from('public_approved_submissions') as any)
       .select('*')
       .order('created_at', { ascending: false });
 
     if (subData) {
-      // Fetch judge's existing scores to mark completed submissions
       let scoredSubmissionIds = new Set<string>();
       if (user) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: scoresData } = await (supabase.from('scores') as any)
           .select('submission_id')
           .eq('judge_id', user.id);
-
         if (scoresData) {
           scoredSubmissionIds = new Set(scoresData.map((s: { submission_id: string }) => s.submission_id));
         }
       }
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const formatted = (subData as any[]).map((item) => ({
         ...item,
         user_has_scored: scoredSubmissionIds.has(item.id),
       }));
-
       setSubmissions(formatted as JudgeSubmissionItem[]);
     }
     setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    fetchJudgeData();
-  }, [fetchJudgeData]);
+  useEffect(() => { fetchJudgeData(); }, [fetchJudgeData]);
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredSubmissions(submissions);
-      return;
-    }
+    if (!searchQuery.trim()) { setFilteredSubmissions(submissions); return; }
     const q = searchQuery.toLowerCase();
     setFilteredSubmissions(
-      submissions.filter(
-        (s) =>
-          s.full_name.toLowerCase().includes(q) ||
-          s.school.toLowerCase().includes(q) ||
-          s.debate_topic.toLowerCase().includes(q)
+      submissions.filter((s) =>
+        s.full_name.toLowerCase().includes(q) ||
+        s.school.toLowerCase().includes(q) ||
+        s.debate_topic.toLowerCase().includes(q)
       )
     );
   }, [submissions, searchQuery]);
 
+  const evaluated = submissions.filter((s) => s.user_has_scored).length;
+  const pending = submissions.length - evaluated;
+
   return (
-    <main className="min-h-screen bg-slate-50 p-6 sm:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">IBETC 2026</span>
-            <h1 className="text-2xl font-extrabold text-slate-900">Virtual Judge Portal</h1>
-            <p className="text-xs text-slate-500 mt-0.5">Evaluate approved student debate submissions.</p>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            {!isJudgingOpen && (
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200 flex items-center space-x-1">
-                <Lock className="w-3.5 h-3.5" />
-                <span>Judging Locked</span>
-              </span>
-            )}
-            <button
-              onClick={fetchJudgeData}
-              className="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-medium transition-colors flex items-center space-x-1.5"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>Refresh List</span>
-            </button>
-          </div>
-        </header>
-
-        {/* SEARCH BAR */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-          <div className="relative max-w-md">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by participant name, school, topic..."
-              className="w-full rounded-xl border border-slate-300 pl-9 pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+    <div className="flex min-h-screen bg-[#f8f9fc]">
+      {/* ====================================================================
+          SIDEBAR
+          ==================================================================== */}
+      <aside className="sidebar-nav hidden lg:flex">
+        <div className="sidebar-logo">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center">
+              <Trophy className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-black text-brand-900 leading-none">IBETC 2026</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Judge Portal</p>
+            </div>
           </div>
         </div>
+        <nav className="flex-1 space-y-0.5">
+          <Link href="/staff/judge" className="sidebar-link active">
+            <BarChart2 className="w-4 h-4" />
+            My Queue
+          </Link>
+        </nav>
+        <div className="pt-4 border-t border-slate-100">
+          <Link href="/" className="sidebar-link text-slate-400">
+            <LogOut className="w-4 h-4" />
+            Exit Portal
+          </Link>
+        </div>
+      </aside>
 
-        {/* SUBMISSIONS LIST */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          {isLoading ? (
-            <div className="p-12 text-center text-xs text-slate-500 flex items-center justify-center space-x-2">
-              <RefreshCw className="w-4 h-4 animate-spin text-brand-600" />
-              <span>Loading debate entries available for judging...</span>
+      {/* ====================================================================
+          MAIN CONTENT
+          ==================================================================== */}
+      <main className="flex-1 p-6 sm:p-8 min-w-0">
+        <div className="max-w-5xl space-y-6">
+          {/* Page header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="section-eyebrow mb-3">
+                <Mic2 className="w-3.5 h-3.5" />
+                Virtual Judge Portal
+              </div>
+              <h1 className="section-title text-3xl">My Judging Queue</h1>
+              <p className="text-slate-500 text-sm mt-1.5">
+                Evaluate approved student debate submissions.
+              </p>
             </div>
-          ) : filteredSubmissions.length === 0 ? (
-            <div className="p-12 text-center text-xs text-slate-500">
-              No debate entries available for judging.
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              {!isJudgingOpen && (
+                <span className="badge badge-rejected">
+                  <Lock className="w-3 h-3" />
+                  Judging Locked
+                </span>
+              )}
+              <button
+                onClick={fetchJudgeData}
+                className="btn-ghost text-xs"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-semibold">
-                    <th className="p-4">Participant & School</th>
-                    <th className="p-4">Debate Topic</th>
-                    <th className="p-4">Submitted Date</th>
-                    <th className="p-4">Your Evaluation</th>
-                    <th className="p-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {filteredSubmissions.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50/50">
-                      <td className="p-4">
-                        <span className="font-bold text-slate-900 block">{item.full_name}</span>
-                        <span className="text-slate-500 text-[11px] block">{item.school}</span>
-                      </td>
-                      <td className="p-4 max-w-xs truncate">{item.debate_topic}</td>
-                      <td className="p-4 whitespace-nowrap">{formatDate(item.created_at)}</td>
-                      <td className="p-4">
-                        {item.user_has_scored ? (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>Evaluated</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                            <Clock className="w-3.5 h-3.5" />
-                            <span>Not Judged Yet</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4 text-right">
-                        <Link
-                          href={`/staff/judge/${item.id}`}
-                          className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg transition-colors inline-flex items-center space-x-1"
-                        >
-                          <Play className="w-3.5 h-3.5 fill-white" />
-                          <span>{item.user_has_scored ? 'Edit Scores' : 'Judge Video'}</span>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          </div>
+
+          {/* Stats row */}
+          {!isLoading && (
+            <div className="grid grid-cols-3 gap-4 animate-fade-in">
+              {[
+                { label: 'Total Assigned', value: submissions.length, color: 'stat-card-indigo', icon: FileText, iconClass: 'text-brand-600 bg-brand-50' },
+                { label: 'Evaluated', value: evaluated, color: 'stat-card-emerald', icon: CheckCircle2, iconClass: 'text-emerald-700 bg-emerald-50' },
+                { label: 'Remaining', value: pending, color: 'stat-card-amber', icon: Clock, iconClass: 'text-amber-700 bg-amber-50' },
+              ].map(({ label, value, color, icon: Icon, iconClass }) => (
+                <div key={label} className={`stat-card ${color}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${iconClass}`}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-display font-black text-slate-900">{value}</p>
+                </div>
+              ))}
             </div>
           )}
+
+          {/* Judging locked warning */}
+          {!isJudgingOpen && (
+            <div className="bg-rose-50 border border-rose-200 rounded-xl p-5 flex items-start gap-4 animate-slide-up">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0">
+                <Lock className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <p className="font-bold text-rose-900 mb-1">Judging is Currently Locked</p>
+                <p className="text-sm text-rose-700">
+                  The competition administrator has locked the judging process. Contact the admin for more information.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Search */}
+          <div className="search-bar max-w-md">
+            <Search className="search-icon w-4 h-4" />
+            <input
+              type="text"
+              id="judge-search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search participant, school, or topic..."
+            />
+          </div>
+
+          {/* Table */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+            {isLoading ? (
+              <div className="p-12 text-center flex flex-col items-center gap-3 text-slate-400">
+                <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
+                <span className="text-sm">Loading available debate entries...</span>
+              </div>
+            ) : filteredSubmissions.length === 0 ? (
+              <div className="p-16 text-center">
+                <div className="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3">
+                  <Mic2 className="w-7 h-7 text-slate-300" />
+                </div>
+                <p className="text-slate-700 font-semibold mb-1">
+                  {searchQuery ? 'No matches found' : 'No entries available for judging'}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {searchQuery
+                    ? 'Try a different search term'
+                    : 'Approved debate entries will appear here once approved by the organizer.'}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Participant &amp; School</th>
+                      <th>Debate Topic</th>
+                      <th>Submitted</th>
+                      <th>Your Evaluation</th>
+                      <th className="text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSubmissions.map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          <span className="font-semibold text-slate-900 block">{item.full_name}</span>
+                          <span className="text-[11px] text-slate-400">{item.school}</span>
+                        </td>
+                        <td className="max-w-xs">
+                          <span className="text-slate-600 block truncate">{item.debate_topic}</span>
+                        </td>
+                        <td className="whitespace-nowrap text-slate-500">{formatDate(item.created_at)}</td>
+                        <td>
+                          {item.user_has_scored ? (
+                            <span className="badge badge-approved">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Evaluated
+                            </span>
+                          ) : (
+                            <span className="badge badge-pending">
+                              <Clock className="w-3 h-3" />
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="text-right">
+                          <Link
+                            href={`/staff/judge/${item.id}`}
+                            className={`btn-primary text-xs px-4 py-2 ${!isJudgingOpen ? 'opacity-50 pointer-events-none' : ''}`}
+                          >
+                            <Play className="w-3.5 h-3.5 fill-white" />
+                            {item.user_has_scored ? 'Edit Scores' : 'Judge Video'}
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

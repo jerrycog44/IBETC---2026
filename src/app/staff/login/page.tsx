@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { ShieldCheck, Lock, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, Lock, AlertCircle, RefreshCw, ArrowLeft, Eye, EyeOff, Mic2 } from 'lucide-react';
 
 export default function StaffLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -26,7 +27,6 @@ export default function StaffLoginPage() {
     const supabase = createClient();
 
     try {
-      // 1. Authenticate with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
@@ -36,7 +36,6 @@ export default function StaffLoginPage() {
         throw new Error(authError?.message || 'Invalid staff credentials.');
       }
 
-      // 2. Query staff role to verify authorization
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: staffData, error: staffError } = await (supabase.from('staff_users') as any)
         .select('role')
@@ -44,12 +43,10 @@ export default function StaffLoginPage() {
         .single();
 
       if (staffError || !staffData) {
-        // Sign out if not registered as staff
         await supabase.auth.signOut();
         throw new Error('Access Denied: Account is not registered as authorized staff.');
       }
 
-      // 3. Redirect based on role
       if (staffData.role === 'judge') {
         router.push('/staff/judge');
       } else {
@@ -65,86 +62,135 @@ export default function StaffLoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 flex flex-col justify-center">
-      <div className="max-w-md mx-auto w-full">
-        <Link href="/" className="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-900 mb-6 transition-colors">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Home</span>
-        </Link>
+    <main className="min-h-screen bg-[#f8f9fc] flex flex-col">
+      {/* Top nav */}
+      <div className="bg-white border-b border-slate-100 px-4 py-4">
+        <div className="max-w-md mx-auto flex items-center gap-4">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-brand-600 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to Home
+          </Link>
+          <div className="w-px h-4 bg-slate-200" />
+          <div className="flex items-center gap-2">
+            <Mic2 className="w-4 h-4 text-brand-600" />
+            <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">IBETC 2026</span>
+          </div>
+        </div>
+      </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-          <header className="text-center mb-6">
-            <div className="w-12 h-12 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center mx-auto mb-3 text-brand-600">
-              <ShieldCheck className="w-6 h-6" />
+      {/* Main content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md animate-slide-up">
+          {/* Logo area */}
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-950 to-brand-800 flex items-center justify-center mx-auto mb-4 shadow-glow animate-pulse-glow">
+              <ShieldCheck className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-slate-900">IBETC 2026 Staff Portal</h1>
-            <p className="text-xs text-slate-500 mt-1">Authorized Admin & Judge Login</p>
-          </header>
-
-          {errorMessage && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start space-x-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-500" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1">
-                Staff Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="staff@eloquentyouth.org"
-                className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 pr-10"
-                />
-                <Lock className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-sm transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 shadow-sm"
-              >
-                {isLoading ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Authenticating...</span>
-                  </>
-                ) : (
-                  <span>Sign In to Staff Portal</span>
-                )}
-              </button>
-            </div>
-          </form>
-
-          <footer className="mt-6 text-center border-t border-slate-100 pt-4">
-            <p className="text-[11px] text-slate-400">
-              Staff accounts are provisioned by authorized system administrators. Public registration is disabled.
+            <h1 className="section-title text-3xl">Staff Portal</h1>
+            <p className="text-slate-500 text-sm mt-2">
+              Authorized admin &amp; judge access only
             </p>
-          </footer>
+          </div>
+
+          {/* Login card */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-brand-950 via-brand-700 to-brand-500" />
+
+            <div className="p-8">
+              {/* Error alert */}
+              {errorMessage && (
+                <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 animate-slide-up">
+                  <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-700">{errorMessage}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className="space-y-5">
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" className="form-label">
+                    Staff Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="staff@eloquentyouth.org"
+                    autoComplete="email"
+                    className="form-input"
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label htmlFor="password" className="form-label">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      autoComplete="current-password"
+                      className="form-input pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    id="staff-login-btn"
+                    disabled={isLoading}
+                    className="btn-primary w-full justify-center py-4 text-base"
+                  >
+                    {isLoading ? (
+                      <>
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        Authenticating...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-5 h-5" />
+                        Sign In to Staff Portal
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Footer note */}
+            <div className="bg-slate-50 border-t border-slate-100 px-8 py-4">
+              <p className="text-center text-xs text-slate-400 leading-relaxed">
+                Staff accounts are provisioned by authorized system administrators.
+                Public registration is disabled.
+              </p>
+            </div>
+          </div>
+
+          {/* Security badge */}
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-400">
+            <Lock className="w-3 h-3" />
+            <span>Secured by Supabase Auth · IBETC 2026</span>
+          </div>
         </div>
       </div>
     </main>

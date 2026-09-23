@@ -2,8 +2,25 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'IBETC 2026 — Ibadan Eloquent Youth and Teens Conference',
-  description: 'Official debate platform for the Ibadan Eloquent Youth and Teens Conference 2026, organized by Eloquent Youth Global Integrity Initiative.',
+  title: {
+    default: 'IBETC 2026 — Ibadan Eloquent Youth and Teens Conference',
+    template: '%s | IBETC 2026',
+  },
+  description:
+    'Official debate competition platform for the Ibadan Eloquent Youth and Teens Conference 2026, organized by Eloquent Youth Global Integrity Initiative.',
+  keywords: [
+    'IBETC 2026',
+    'Ibadan Eloquent Youth',
+    'debate competition',
+    'youth conference',
+    'teens debate',
+    'Eloquent Youth Global Integrity Initiative',
+  ],
+  openGraph: {
+    title: 'IBETC 2026 — Ibadan Eloquent Youth and Teens Conference',
+    description: 'Submit your debate entry for IBETC 2026.',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
@@ -13,7 +30,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen flex flex-col bg-slate-50 text-slate-900">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="antialiased min-h-screen flex flex-col bg-[#f8f9fc] text-slate-900">
         {children}
       </body>
     </html>

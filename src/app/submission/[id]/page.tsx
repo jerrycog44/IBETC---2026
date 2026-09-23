@@ -152,132 +152,141 @@ export default function SubmissionStatusPage({
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6">
-      <div className="max-w-2xl mx-auto">
-        <Link href="/" className="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-900 mb-6 transition-colors">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Home</span>
-        </Link>
+    <main className="min-h-screen bg-[#f8f9fc]">
+      {/* Top nav */}
+      <div className="bg-white border-b border-slate-100">
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-brand-600 transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to Home
+          </Link>
+        </div>
+      </div>
+      <div className="max-w-2xl mx-auto px-4 py-10">
 
         {/* PROMPT KEY IF NOT PROVIDED OR INVALID */}
         {(!participantKey || error) && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 text-center">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-600">
-              <Lock className="w-6 h-6" />
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden animate-slide-up">
+            <div className="h-1 bg-gradient-to-r from-brand-500 to-brand-700" />
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-brand-50 flex items-center justify-center mx-auto mb-4 text-brand-600 animate-pulse-glow">
+                <Lock className="w-8 h-8" />
+              </div>
+              <h1 className="section-title text-2xl mb-2">Participant Verification</h1>
+              <p className="text-slate-500 text-sm max-w-sm mx-auto mb-6">
+                Enter your private access key to view submission status for <strong className="text-slate-700 font-mono">#{id.substring(0, 8)}</strong>.
+              </p>
+
+              {error && (
+                <div className="mb-5 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 text-left animate-slide-up">
+                  <Lock className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-700">{error}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleKeySubmit} className="max-w-sm mx-auto space-y-3">
+                <div className="relative">
+                  <Key className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    value={inputKey}
+                    onChange={(e) => setInputKey(e.target.value)}
+                    placeholder="Enter your private 32-character key"
+                    className="form-input pl-10 font-mono text-sm"
+                  />
+                </div>
+                <button type="submit" className="btn-primary w-full justify-center py-3">
+                  <Key className="w-4 h-4" />
+                  Access Status
+                </button>
+              </form>
             </div>
-            <h1 className="text-xl font-bold text-slate-900">Participant Verification</h1>
-            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto mb-6">
-              Please enter your private 32-character participant key to view the submission status for #{id.substring(0, 8)}.
-            </p>
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleKeySubmit} className="max-w-md mx-auto space-y-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={inputKey}
-                  onChange={(e) => setInputKey(e.target.value)}
-                  placeholder="Enter secret participant key"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 pr-10"
-                />
-                <Key className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
-              </div>
-              <button
-                type="submit"
-                className="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold text-xs transition-colors"
-              >
-                Access Status
-              </button>
-            </form>
           </div>
         )}
 
         {/* LOADING STATE */}
         {isLoading && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
-            <RefreshCw className="w-6 h-6 animate-spin text-brand-600 mx-auto mb-2" />
-            <p className="text-xs text-slate-500">Verifying participant key...</p>
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-card p-16 text-center animate-fade-in">
+            <RefreshCw className="w-8 h-8 animate-spin text-brand-500 mx-auto mb-3" />
+            <p className="text-slate-500 text-sm">Verifying participant key...</p>
           </div>
         )}
 
         {/* AUTHORIZED SUBMISSION DETAILS */}
         {submission && !isLoading && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <header className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden animate-slide-up">
+            {/* Status header bar */}
+            <div className={`h-1.5 ${submission.status === 'approved' ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' : submission.status === 'rejected' ? 'bg-gradient-to-r from-rose-400 to-rose-600' : submission.status === 'hidden' ? 'bg-gradient-to-r from-slate-300 to-slate-400' : 'bg-gradient-to-r from-amber-400 to-amber-600'}`} />
+
+            <header className="px-7 py-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div>
-                <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Submission #{submission.id.substring(0, 8)}</span>
-                <h1 className="text-xl font-extrabold text-slate-900 mt-0.5">{submission.full_name}</h1>
-                <p className="text-xs text-slate-500">{submission.school}</p>
+                <p className="text-[11px] font-mono text-slate-400 mb-1">#{submission.id.substring(0, 8)}</p>
+                <h1 className="text-xl font-display font-bold text-slate-900">{submission.full_name}</h1>
+                <p className="text-sm text-slate-500 mt-0.5">{submission.school}</p>
               </div>
               <div>{getStatusBadge(submission.status)}</div>
             </header>
 
-            <div className="p-6 space-y-6">
+            <div className="px-7 py-6 space-y-6">
               {/* VIDEO PLAYER */}
               <div>
-                <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Debate Video Preview</h2>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Debate Video Preview</p>
                 {signedVideoUrl ? (
-                  <div className="relative aspect-video rounded-xl bg-slate-900 overflow-hidden shadow-inner">
-                    <video
-                      controls
-                      src={signedVideoUrl}
-                      className="w-full h-full object-contain"
-                    />
+                  <div className="aspect-video rounded-xl bg-brand-950 overflow-hidden shadow-lg">
+                    <video controls src={signedVideoUrl} className="w-full h-full object-contain" />
                   </div>
                 ) : (
-                  <div className="aspect-video rounded-xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-400 text-xs">
-                    <Play className="w-8 h-8 mb-1 text-slate-300" />
-                    <span>Loading video playback...</span>
+                  <div className="aspect-video rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-2 text-slate-400">
+                    <RefreshCw className="w-6 h-6 animate-spin text-brand-400" />
+                    <span className="text-sm">Loading video playback...</span>
                   </div>
                 )}
               </div>
 
               {/* DETAILS GRID */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border-t border-slate-100 pt-4">
+              <div className="bg-slate-50 rounded-xl border border-slate-100 p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <span className="font-semibold text-slate-400 block mb-0.5">Debate Topic</span>
-                  <span className="text-slate-900 font-medium">{submission.debate_topic}</span>
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Debate Topic</span>
+                  <span className="text-sm text-slate-900 font-medium">{submission.debate_topic}</span>
                 </div>
                 <div>
-                  <span className="font-semibold text-slate-400 block mb-0.5">Submitted On</span>
-                  <span className="text-slate-900 font-medium">{formatDate(submission.created_at)}</span>
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Submitted On</span>
+                  <span className="text-sm text-slate-900 font-medium">{formatDate(submission.created_at)}</span>
                 </div>
               </div>
 
               {/* ACCOUNT LINKING SECTION */}
-              <div className="border-t border-slate-100 pt-6">
+              <div className="border-t border-slate-100 pt-5">
                 {submission.owner_user_id ? (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-800 flex items-center space-x-2">
-                    <UserCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span>This submission is linked to your user account.</span>
+                  <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <UserCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <span className="text-sm text-emerald-800 font-medium">Submission linked to your user account.</span>
                   </div>
                 ) : currentUser ? (
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold text-slate-900">Link to logged-in account</p>
-                      <p className="text-[11px] text-slate-500">Associate this submission with your current user account.</p>
+                      <p className="text-sm font-semibold text-slate-900 mb-0.5">Link to your account</p>
+                      <p className="text-xs text-slate-500">Associate this submission with your logged-in account.</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleAssociateAccount}
                       disabled={isLinkingAccount || linkSuccess}
-                      className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-xs transition-colors flex-shrink-0"
+                      className="btn-primary text-xs px-4 py-2.5 flex-shrink-0 disabled:opacity-60"
                     >
-                      {isLinkingAccount ? 'Linking...' : linkSuccess ? 'Linked!' : 'Link Account'}
+                      {isLinkingAccount ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" />Linking...</> : linkSuccess ? <><CheckCircle2 className="w-3.5 h-3.5" />Linked!</> : <><UserCheck className="w-3.5 h-3.5" />Link Account</>}
                     </button>
                   </div>
                 ) : (
-                  <div className="bg-brand-50/50 border border-brand-100 rounded-xl p-4 text-xs text-slate-600">
-                    <p className="font-semibold text-slate-900 mb-1">Optional Account Association</p>
-                    <p>
-                      If you log in or sign up later, you can return to this status page to associate this submission with your account.
-                    </p>
+                  <div className="flex items-start gap-3 p-4 bg-brand-50/50 border border-brand-100 rounded-xl">
+                    <Key className="w-4 h-4 text-brand-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800 mb-0.5">Optional Account Association</p>
+                      <p className="text-xs text-slate-500">
+                        Log in or sign up later and return to this page to associate this submission with your account.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
