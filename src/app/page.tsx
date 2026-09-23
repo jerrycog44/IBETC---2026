@@ -5,89 +5,178 @@ export default function HomePage() {
   return (
     <main className="flex flex-col min-h-screen">
       {/* ====================================================================
-          HERO SECTION
+          HERO SECTION — Editorial Art-Directed Composition
           ==================================================================== */}
-      <section className="hero-bg relative flex flex-col items-center justify-center min-h-screen px-4 py-16 text-white text-center overflow-hidden">
-        {/* Animated Mesh Orbs */}
-        <div className="mesh-orb mesh-orb-1" />
-        <div className="mesh-orb mesh-orb-2" />
-        <div className="mesh-orb mesh-orb-3" />
-
-        {/* Subtle grid overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-20"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(16,185,129,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.15) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
-
-        <div className="relative z-10 max-w-4xl mx-auto space-y-8">
-          {/* Logo Card */}
-          <div className="animate-slide-up flex justify-center">
-            <div className="bg-white/95 backdrop-blur-md p-4 rounded-3xl border border-emerald-400/30 shadow-2xl shadow-emerald-950/50 inline-flex flex-col sm:flex-row items-center gap-4">
-              {/* Logo Image */}
+      <section className="hero-editorial-bg relative text-white overflow-hidden border-b border-emerald-900/30">
+        {/* Top Header Bar */}
+        <header className="border-b border-emerald-500/20 bg-emerald-950/40 backdrop-blur-md sticky top-0 z-30">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
+            {/* Brand identity */}
+            <Link href="/" className="flex items-center gap-4 group">
               <img
                 src="/eygii-logo.png"
                 alt="EYGII Logo"
-                className="h-16 sm:h-20 object-contain drop-shadow"
+                className="h-11 object-contain transition-transform group-hover:scale-[1.02]"
               />
-              <div className="text-left border-t sm:border-t-0 sm:border-l border-emerald-900/15 pt-2 sm:pt-0 sm:pl-4">
-                <p className="text-emerald-800 font-black text-sm sm:text-base tracking-tight uppercase leading-tight font-display">
+              <div className="hidden sm:block border-l border-emerald-500/20 pl-4 text-left">
+                <span className="block text-xs font-black tracking-wider text-emerald-100 uppercase font-display">
                   Eloquent Youth &amp; Global Integrity (EYGII)
-                </p>
-                <p className="text-emerald-700 italic font-serif text-xs sm:text-sm mt-0.5">
+                </span>
+                <span className="block text-[11px] text-emerald-400/90 italic font-serif mt-0.5">
                   Motive: Reviving world integrity and moral values
+                </span>
+              </div>
+            </Link>
+
+            {/* Quick Links */}
+            <nav className="flex items-center gap-3 sm:gap-6">
+              <Link
+                href="/gallery"
+                className="text-xs font-semibold uppercase tracking-wider text-emerald-200/80 hover:text-white transition-colors hidden md:inline-flex items-center gap-1.5"
+              >
+                <Star className="w-3.5 h-3.5 text-gold-400" />
+                Gallery
+              </Link>
+              <Link
+                href="/staff/login"
+                className="text-xs font-semibold uppercase tracking-wider text-emerald-200/80 hover:text-white transition-colors hidden sm:inline-flex items-center gap-1.5"
+              >
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                Staff Portal
+              </Link>
+              <Link
+                href="/submit"
+                className="btn-editorial-primary text-xs px-4 py-2.5"
+              >
+                <Video className="w-3.5 h-3.5" />
+                Submit Entry
+              </Link>
+            </nav>
+          </div>
+        </header>
+
+        {/* Hero Editorial Grid Content */}
+        <div className="max-w-7xl mx-auto px-6 py-16 lg:py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+            
+            {/* Left Column: Dominant Editorial Headline & Narrative */}
+            <div className="lg:col-span-7 space-y-8">
+              
+              {/* Metadata Eyebrow */}
+              <div className="inline-flex items-center gap-3 px-3.5 py-1.5 rounded border border-emerald-500/30 bg-emerald-900/30 text-emerald-300 text-xs font-mono font-bold tracking-wider uppercase">
+                <span className="w-2 h-2 rounded-full bg-gold-400 animate-pulse" />
+                <span>IBETC 2026</span>
+                <span className="text-emerald-500">•</span>
+                <span>IBADAN, NIGERIA</span>
+              </div>
+
+              {/* Dominant Editorial Display Typography */}
+              <div className="space-y-2">
+                <p className="text-xs font-mono uppercase tracking-[0.25em] text-gold-400/90 font-semibold">
+                  ANNUAL YOUTH &amp; TEENS DEBATE COMPETITION
                 </p>
+                <h1 className="text-4xl sm:text-6xl lg:text-7xl font-display font-black leading-[1.05] tracking-tight text-white">
+                  IBADAN ELOQUENT <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-amber-500">
+                    YOUTH &amp; TEENS
+                  </span> <br />
+                  CONFERENCE
+                </h1>
+              </div>
+
+              {/* Narrative Subtitle */}
+              <p className="text-base sm:text-lg text-emerald-100/85 leading-relaxed max-w-xl font-normal border-l-2 border-emerald-500/40 pl-4 py-1">
+                Organized by the <strong className="text-white font-semibold">Eloquent Youth &amp; Global Integrity Initiative</strong>, IBETC’26 is Nigeria&apos;s premier annual debate platform — bringing together young debaters to demonstrate persuasive advocacy, intellectual excellence, and moral leadership.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                <Link href="/submit" className="btn-editorial-primary">
+                  <Video className="w-4 h-4" />
+                  Submit Debate Video
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+
+                <Link href="/gallery" className="btn-editorial-secondary">
+                  <Star className="w-4 h-4 text-gold-400" />
+                  Explore Gallery
+                </Link>
               </div>
             </div>
-          </div>
 
-          {/* Title */}
-          <div className="animate-slide-up animation-delay-100 space-y-2">
-            <h1
-              className="text-4xl sm:text-6xl lg:text-7xl font-display font-black leading-[1.1] tracking-tight"
-            >
-              <span className="block text-white">Ibadan Eloquent</span>
-              <span className="block gradient-text-gold">Youth &amp; Teens</span>
-              <span className="block text-white">Conference</span>
-            </h1>
-          </div>
+            {/* Right Column: Architectural Conference Details Card */}
+            <div className="lg:col-span-5">
+              <div className="bg-emerald-950/70 border border-emerald-500/30 rounded-lg p-6 sm:p-8 space-y-6 shadow-2xl relative">
+                <div className="flex items-center justify-between border-b border-emerald-500/20 pb-4">
+                  <span className="text-xs font-mono uppercase text-emerald-400 tracking-wider font-bold">
+                    [ EVENT SPECIFICATION ]
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-500/20 border border-emerald-400/30 text-[11px] font-mono text-emerald-200 uppercase tracking-wider font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    ENTRIES OPEN
+                  </span>
+                </div>
 
-          {/* Year Badge */}
-          <div className="animate-slide-up animation-delay-200 flex justify-center">
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-emerald-950/60 backdrop-blur-md border border-emerald-400/30 shadow-lg">
-              <Trophy className="w-5 h-5 text-gold-400" />
-              <span className="text-2xl font-black text-white tracking-tight">IBETC 2026</span>
-              <Trophy className="w-5 h-5 text-gold-400" />
+                {/* Key Spec Grid */}
+                <div className="space-y-4 font-sans text-xs">
+                  <div className="border-b border-emerald-500/10 pb-3">
+                    <span className="text-emerald-400/70 uppercase text-[10px] font-mono font-bold tracking-widest block mb-1">
+                      ORGANIZER
+                    </span>
+                    <p className="text-sm font-bold text-white leading-snug">
+                      Eloquent Youth &amp; Global Integrity Initiative (EYGII)
+                    </p>
+                  </div>
+
+                  <div className="border-b border-emerald-500/10 pb-3">
+                    <span className="text-emerald-400/70 uppercase text-[10px] font-mono font-bold tracking-widest block mb-1">
+                      MOTIVE &amp; MISSION
+                    </span>
+                    <p className="text-xs italic font-serif text-emerald-200/90 leading-relaxed">
+                      &quot;Reviving world integrity and moral values&quot;
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 border-b border-emerald-500/10 pb-3">
+                    <div>
+                      <span className="text-emerald-400/70 uppercase text-[10px] font-mono font-bold tracking-widest block mb-1">
+                        FORMAT
+                      </span>
+                      <p className="text-xs font-semibold text-white">MP4 Debate Video</p>
+                    </div>
+                    <div>
+                      <span className="text-emerald-400/70 uppercase text-[10px] font-mono font-bold tracking-widest block mb-1">
+                        ELIGIBILITY
+                      </span>
+                      <p className="text-xs font-semibold text-white">Youth &amp; Teens (Nigeria)</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-1">
+                    <span className="text-emerald-400/70 uppercase text-[10px] font-mono font-bold tracking-widest block mb-1">
+                      PARTICIPANT ACCESS SYSTEM
+                    </span>
+                    <p className="text-xs text-emerald-200/80 leading-relaxed">
+                      Instant participant key issuance for direct status tracking and score verification.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card footer CTA */}
+                <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-emerald-400/80 uppercase">
+                    CONFERENCE YEAR: 2026
+                  </span>
+                  <Link
+                    href="/submit"
+                    className="text-xs font-bold text-gold-400 hover:text-white uppercase tracking-wider flex items-center gap-1 transition-colors"
+                  >
+                    Start Entry <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Subtitle */}
-          <p className="animate-slide-up animation-delay-300 text-lg sm:text-xl text-emerald-100/90 max-w-2xl mx-auto leading-relaxed font-medium">
-            The premier annual debate competition for youth and teens across Nigeria.
-            Submit your video entry, track your status, and compete for excellence.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="animate-slide-up animation-delay-400 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/submit" className="btn-gold w-full sm:w-auto text-base px-8 py-4">
-              <Video className="w-5 h-5" />
-              Submit Your Entry
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/gallery" className="btn-outline border-emerald-400/40 text-emerald-100 hover:bg-emerald-900/40 hover:border-emerald-400 w-full sm:w-auto text-base px-8 py-4">
-              <Star className="w-4 h-4 text-gold-400" />
-              View Approved Entries
-            </Link>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce-subtle">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
-            <div className="w-1 h-2 bg-white/60 rounded-full animate-bounce" />
           </div>
         </div>
       </section>
