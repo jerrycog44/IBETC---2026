@@ -154,12 +154,22 @@ export default function SubmissionStatusPage({
   return (
     <main className="min-h-screen bg-[#f8f9fc]">
       {/* Top nav */}
-      <div className="bg-white border-b border-slate-100">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-brand-600 transition-colors">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Home
-          </Link>
+      <div className="bg-white border-b border-emerald-900/10 shadow-sm sticky top-0 z-20">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 hover:text-emerald-600 transition-colors">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Home
+            </Link>
+            <div className="w-px h-6 bg-emerald-900/15" />
+            <Link href="/" className="flex items-center gap-3">
+              <img src="/eygii-logo.png" alt="EYGII Logo" className="h-10 object-contain" />
+              <div className="text-left">
+                <span className="block text-xs font-black text-emerald-900 uppercase tracking-tight">EYGII — IBETC 2026</span>
+                <span className="block text-[10px] text-emerald-700 italic hidden sm:block">Reviving world integrity and moral values</span>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
       <div className="max-w-2xl mx-auto px-4 py-10">

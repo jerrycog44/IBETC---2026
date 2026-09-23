@@ -64,19 +64,23 @@ export default function StaffLoginPage() {
   return (
     <main className="min-h-screen bg-[#f8f9fc] flex flex-col">
       {/* Top nav */}
-      <div className="bg-white border-b border-slate-100 px-4 py-4">
-        <div className="max-w-md mx-auto flex items-center gap-4">
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-brand-600 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Home
-          </Link>
-          <div className="w-px h-4 bg-slate-200" />
-          <div className="flex items-center gap-2">
-            <Mic2 className="w-4 h-4 text-brand-600" />
-            <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">IBETC 2026</span>
+      <div className="bg-white border-b border-emerald-900/10 shadow-sm sticky top-0 z-20">
+        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 hover:text-emerald-600 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Home
+            </Link>
+            <div className="w-px h-6 bg-emerald-900/15" />
+            <Link href="/" className="flex items-center gap-3">
+              <img src="/eygii-logo.png" alt="EYGII Logo" className="h-10 object-contain" />
+              <div className="text-left">
+                <span className="block text-xs font-black text-emerald-900 uppercase tracking-tight">EYGII — IBETC 2026</span>
+              </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -86,12 +90,15 @@ export default function StaffLoginPage() {
         <div className="w-full max-w-md animate-slide-up">
           {/* Logo area */}
           <div className="text-center mb-8">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-950 to-brand-800 flex items-center justify-center mx-auto mb-4 shadow-glow animate-pulse-glow">
-              <ShieldCheck className="w-10 h-10 text-white" />
+            <div className="bg-white p-4 rounded-3xl border border-emerald-400/30 shadow-xl inline-flex flex-col items-center gap-2 mb-4">
+              <img src="/eygii-logo.png" alt="EYGII Official Logo" className="h-16 object-contain" />
+              <p className="text-[11px] text-emerald-800 font-bold uppercase tracking-wider font-display">
+                Eloquent Youth &amp; Global Integrity (EYGII)
+              </p>
             </div>
             <h1 className="section-title text-3xl">Staff Portal</h1>
-            <p className="text-slate-500 text-sm mt-2">
-              Authorized admin &amp; judge access only
+            <p className="text-emerald-700 text-sm mt-1 font-medium">
+              Authorized Admin &amp; Judge Portal
             </p>
           </div>
 

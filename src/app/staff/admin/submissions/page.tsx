@@ -133,15 +133,13 @@ export default function AdminSubmissionsPage() {
           ==================================================================== */}
       <aside className="sidebar-nav hidden lg:flex">
         <div className="sidebar-logo">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center">
-              <Trophy className="w-4 h-4 text-white" />
-            </div>
+          <Link href="/" className="flex items-center gap-3">
+            <img src="/eygii-logo.png" alt="EYGII Logo" className="h-10 object-contain" />
             <div>
-              <p className="text-xs font-black text-brand-900 leading-none">IBETC 2026</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Admin Portal</p>
+              <p className="text-xs font-black text-emerald-950 uppercase tracking-tight leading-tight font-display">EYGII Admin</p>
+              <p className="text-[10px] text-emerald-700 italic mt-0.5">IBETC 2026</p>
             </div>
-          </div>
+          </Link>
         </div>
         <nav className="flex-1 space-y-0.5">
           <Link href="/staff/admin" className="sidebar-link">
