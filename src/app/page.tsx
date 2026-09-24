@@ -22,21 +22,30 @@ import {
 } from 'lucide-react';
 
 export default async function HomePage() {
-  const supabase = await createClient();
-
-  // Fetch approved debaters for live gallery section
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: debaters } = await (supabase.from('public_approved_submissions') as any)
-    .select('*')
-    .order('vote_count', { ascending: false })
-    .limit(6);
-
-  // Fetch finalists if any marked
+  let debaters: any[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: finalists } = await (supabase.from('public_approved_submissions') as any)
-    .select('*')
-    .eq('is_finalist', true)
-    .order('finalist_rank', { ascending: true, nullsFirst: false });
+  let finalists: any[] = [];
+
+  try {
+    const supabase = await createClient();
+
+    // Fetch approved debaters for live gallery section
+    const { data: debatersData } = await (supabase.from('public_approved_submissions') as any)
+      .select('*')
+      .order('vote_count', { ascending: false })
+      .limit(6);
+    if (debatersData) debaters = debatersData;
+
+    // Fetch finalists if any marked
+    const { data: finalistsData } = await (supabase.from('public_approved_submissions') as any)
+      .select('*')
+      .eq('is_finalist', true)
+      .order('finalist_rank', { ascending: true, nullsFirst: false });
+    if (finalistsData) finalists = finalistsData;
+  } catch (error) {
+    console.error('[HomePage] Supabase fetch error:', error);
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8faf7]">

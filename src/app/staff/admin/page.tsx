@@ -22,12 +22,7 @@ import {
 } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient();
-
-  // Fetch updated stats including total votes and finalists
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: statsData } = await (supabase as any).rpc('get_admin_submission_stats');
-  const stats = statsData?.[0] || {
+  let stats = {
     total_count: 0,
     pending_count: 0,
     approved_count: 0,
@@ -36,14 +31,30 @@ export default async function AdminDashboardPage() {
     total_votes: 0,
     finalists_count: 0,
   };
-
-  // Check voting open setting
+  let isVotingOpen = true;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: isVotingOpen } = await (supabase as any).rpc('is_voting_open');
+  let user: any = null;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+
+    // Fetch updated stats including total votes and finalists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: statsData } = await (supabase as any).rpc('get_admin_submission_stats');
+    if (statsData?.[0]) stats = statsData[0];
+
+    // Check voting open setting
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: votingLock } = await (supabase as any).rpc('is_voting_open');
+    if (typeof votingLock === 'boolean') isVotingOpen = votingLock;
+
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    user = authUser;
+  } catch (error) {
+    console.error('[AdminDashboardPage] Error fetching data:', error);
+  }
 
   const statCards = [
     {

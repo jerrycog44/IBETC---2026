@@ -17,15 +17,19 @@ interface EntryPageProps {
 }
 
 async function getEntry(slugOrId: string) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  // Query public approved submission via RPC or direct select
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any).rpc('get_public_entry_by_slug_or_id', {
-    p_identifier: slugOrId,
-  });
+    // Query public approved submission via RPC or direct select
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc('get_public_entry_by_slug_or_id', {
+      p_identifier: slugOrId,
+    });
 
-  if (error || !data || data.length === 0) {
+    if (!error && data && data.length > 0) {
+      return data[0];
+    }
+
     // Fallback: direct select from public_approved_submissions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: directData } = await (supabase.from('public_approved_submissions') as any)
@@ -36,10 +40,11 @@ async function getEntry(slugOrId: string) {
     if (directData && directData.length > 0) {
       return directData[0];
     }
-    return null;
+  } catch (err) {
+    console.error('[getEntry] Error fetching entry:', err);
   }
 
-  return data[0];
+  return null;
 }
 
 export async function generateMetadata({ params }: EntryPageProps): Promise<Metadata> {
