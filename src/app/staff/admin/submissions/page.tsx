@@ -1,16 +1,33 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { formatDate } from '@/lib/utils/formatters';
 import { updateSubmissionStatusAction } from '@/app/actions/submissions';
+import { toggleFinalistAction } from '@/app/actions/voting';
 import { generateSubmissionsCSV } from '@/lib/utils/export-csv';
 import { SubmissionStatus } from '@/lib/supabase/database.types';
 import {
-  Search, Filter, CheckCircle2, XCircle, EyeOff, Play, X,
-  AlertTriangle, ArrowLeft, RefreshCw, Download, FileText,
-  Trophy, Users, BarChart2, Sliders, LogOut
+  Search,
+  Filter,
+  CheckCircle2,
+  XCircle,
+  EyeOff,
+  Play,
+  X,
+  AlertTriangle,
+  ArrowLeft,
+  RefreshCw,
+  Download,
+  FileText,
+  Trophy,
+  Users,
+  BarChart2,
+  Sliders,
+  LogOut,
+  ThumbsUp,
+  Award,
 } from 'lucide-react';
 
 interface SubmissionItem {
@@ -22,17 +39,32 @@ interface SubmissionItem {
   debate_topic: string;
   video_path: string;
   status: SubmissionStatus;
+  vote_count: number;
+  is_finalist: boolean;
+  finalist_rank: number | null;
+  slug: string | null;
   created_at: string;
 }
 
-const STATUS_TABS = ['all', 'pending', 'approved', 'rejected', 'hidden'] as const;
+const STATUS_TABS = ['all', 'pending', 'approved', 'finalists', 'rejected', 'hidden'] as const;
 
-function getStatusBadge(status: SubmissionStatus) {
+function getStatusBadge(status: SubmissionStatus, isFinalist?: boolean) {
+  if (isFinalist) {
+    return (
+      <span className="badge badge-finalist">
+        <Trophy className="w-3 h-3 text-amber-600" /> Finalist
+      </span>
+    );
+  }
   switch (status) {
-    case 'approved': return <span className="badge badge-approved"><CheckCircle2 className="w-3 h-3" />Approved</span>;
-    case 'rejected': return <span className="badge badge-rejected"><XCircle className="w-3 h-3" />Rejected</span>;
-    case 'hidden': return <span className="badge badge-hidden"><EyeOff className="w-3 h-3" />Hidden</span>;
-    default: return <span className="badge badge-pending">Pending</span>;
+    case 'approved':
+      return <span className="badge badge-approved"><CheckCircle2 className="w-3 h-3" />Approved</span>;
+    case 'rejected':
+      return <span className="badge badge-rejected"><XCircle className="w-3 h-3" />Rejected</span>;
+    case 'hidden':
+      return <span className="badge badge-hidden"><EyeOff className="w-3 h-3" />Hidden</span>;
+    default:
+      return <span className="badge badge-pending">Pending Review</span>;
   }
 }
 
@@ -51,26 +83,38 @@ export default function AdminSubmissionsPage() {
   const fetchSubmissions = useCallback(async () => {
     setIsLoading(true);
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from('submissions')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from('submissions') as any)
       .select('*')
       .order('created_at', { ascending: false });
-    if (!error && data) setSubmissions(data as SubmissionItem[]);
+
+    if (!error && data) {
+      setSubmissions(data as SubmissionItem[]);
+    }
     setIsLoading(false);
   }, []);
 
-  useEffect(() => { fetchSubmissions(); }, [fetchSubmissions]);
+  useEffect(() => {
+    fetchSubmissions();
+  }, [fetchSubmissions]);
 
   useEffect(() => {
     let result = [...submissions];
-    if (selectedStatus !== 'all') result = result.filter((item) => item.status === selectedStatus);
+
+    if (selectedStatus === 'finalists') {
+      result = result.filter((item) => item.is_finalist);
+    } else if (selectedStatus !== 'all') {
+      result = result.filter((item) => item.status === selectedStatus);
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter((item) =>
-        item.full_name.toLowerCase().includes(q) ||
-        item.school.toLowerCase().includes(q) ||
-        item.email.toLowerCase().includes(q) ||
-        item.debate_topic.toLowerCase().includes(q)
+      result = result.filter(
+        (item) =>
+          item.full_name.toLowerCase().includes(q) ||
+          item.school.toLowerCase().includes(q) ||
+          item.email.toLowerCase().includes(q) ||
+          item.debate_topic.toLowerCase().includes(q)
       );
     }
     setFilteredSubmissions(result);
@@ -103,6 +147,22 @@ export default function AdminSubmissionsPage() {
     }
   };
 
+  const handleToggleFinalist = async (isFinalist: boolean) => {
+    if (!selectedSubmission) return;
+    setIsUpdatingStatus(true);
+    const res = await toggleFinalistAction(selectedSubmission.id, isFinalist);
+    setIsUpdatingStatus(false);
+
+    if (res.success) {
+      setSelectedSubmission((prev) => (prev ? { ...prev, is_finalist: isFinalist } : null));
+      setSubmissions((prev) =>
+        prev.map((item) => (item.id === selectedSubmission.id ? { ...item, is_finalist: isFinalist } : item))
+      );
+    } else {
+      alert(res.error || 'Failed to toggle finalist status.');
+    }
+  };
+
   const handleExportCSV = () => {
     if (filteredSubmissions.length === 0) return;
     const exportRows = filteredSubmissions.map((item) => ({
@@ -113,6 +173,8 @@ export default function AdminSubmissionsPage() {
       email: item.email,
       debateTopic: item.debate_topic,
       status: item.status,
+      voteCount: item.vote_count || 0,
+      isFinalist: item.is_finalist ? 'Yes' : 'No',
       submittedAt: formatDate(item.created_at),
     }));
     const csvContent = generateSubmissionsCSV(exportRows);
@@ -127,128 +189,114 @@ export default function AdminSubmissionsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f8f9fc]">
-      {/* ====================================================================
-          SIDEBAR
-          ==================================================================== */}
-      <aside className="sidebar-nav hidden lg:flex">
-        <div className="sidebar-logo">
+    <div className="flex min-h-screen bg-[#f8faf7]">
+      {/* SIDEBAR */}
+      <aside className="w-64 bg-[#031c0e] text-white p-6 hidden lg:flex flex-col border-r border-brand-600/30">
+        <div className="pb-6 border-b border-brand-600/20 mb-6">
           <Link href="/" className="flex items-center gap-3">
-            <img src="/eygii-logo.png" alt="EYGII Logo" className="h-10 object-contain" />
+            <img src="/eygii-logo.png" alt="EYGII Logo" className="h-10 bg-white rounded p-1 object-contain" />
             <div>
-              <p className="text-xs font-black text-emerald-950 uppercase tracking-tight leading-tight font-display">EYGII Admin</p>
-              <p className="text-[10px] text-emerald-700 italic mt-0.5">IBETC 2026</p>
+              <p className="text-xs font-black text-white uppercase tracking-tight font-display">EYGII Admin</p>
+              <p className="text-[10px] text-emerald-400 italic">IBETC 2026</p>
             </div>
           </Link>
         </div>
-        <nav className="flex-1 space-y-0.5">
-          <Link href="/staff/admin" className="sidebar-link">
+        <nav className="flex-1 space-y-1 text-sm font-semibold">
+          <Link href="/staff/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
             <BarChart2 className="w-4 h-4" />
-            Dashboard
+            Dashboard Overview
           </Link>
-          <Link href="/staff/admin/submissions" className="sidebar-link active">
+          <Link href="/staff/admin/submissions" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#027B39] text-white">
             <FileText className="w-4 h-4" />
-            Submissions
+            Submissions &amp; Votes
           </Link>
-          <Link href="/staff/admin/staff" className="sidebar-link">
+          <Link href="/staff/admin/staff" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
             <Users className="w-4 h-4" />
-            Staff Accounts
+            Staff &amp; Judges
           </Link>
-          <Link href="/staff/admin/criteria" className="sidebar-link">
+          <Link href="/staff/admin/criteria" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
             <Sliders className="w-4 h-4" />
             Judging Criteria
           </Link>
         </nav>
-        <div className="pt-4 border-t border-slate-100">
-          <Link href="/" className="sidebar-link text-slate-400">
+        <div className="pt-4 border-t border-brand-600/20">
+          <Link href="/" className="flex items-center gap-2 text-xs font-bold text-neutral-400 hover:text-white px-3 py-2">
             <LogOut className="w-4 h-4" />
-            Exit Admin
+            Exit Admin Portal
           </Link>
         </div>
       </aside>
 
-      {/* ====================================================================
-          MAIN CONTENT
-          ==================================================================== */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 p-6 sm:p-8 min-w-0">
-        {/* Mobile back link */}
         <div className="lg:hidden mb-4">
-          <Link
-            href="/staff/admin"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-brand-600 transition-colors"
-          >
+          <Link href="/staff/admin" className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-600">
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to Dashboard
           </Link>
         </div>
 
         <div className="max-w-6xl space-y-6">
-          {/* Page header */}
+          {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="section-title text-2xl sm:text-3xl">Submissions Management</h1>
-              <p className="text-slate-500 text-sm mt-1">
-                Review debate entries · {submissions.length} total
+              <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">
+                Submissions &amp; Voting Management
+              </h1>
+              <p className="text-xs sm:text-sm text-neutral-600 mt-1">
+                Review entries, inspect votes, approve debaters, and assign Grand Finale finalists.
               </p>
             </div>
             <div className="flex items-center gap-2 self-start sm:self-auto">
               <button
                 onClick={handleExportCSV}
                 disabled={filteredSubmissions.length === 0}
-                className="btn-ghost text-xs disabled:opacity-50"
+                className="btn-ghost text-xs disabled:opacity-50 flex items-center gap-1.5"
               >
                 <Download className="w-3.5 h-3.5" />
                 Export CSV
               </button>
-              <button
-                onClick={fetchSubmissions}
-                className="btn-ghost text-xs"
-              >
+              <button onClick={fetchSubmissions} className="btn-ghost text-xs flex items-center gap-1.5">
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </button>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-card p-5">
-            <div className="flex flex-col gap-4">
-              {/* Search */}
-              <div className="search-bar max-w-sm">
-                <Search className="search-icon w-4 h-4" />
+          {/* Filter Bar */}
+          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 <input
                   type="text"
-                  id="submissions-search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search name, school, email, topic..."
+                  className="w-full pl-9 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-medium outline-none focus:border-[#027B39]"
                 />
               </div>
 
-              {/* Status filter tabs */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold">
-                  <Filter className="w-3.5 h-3.5" />
-                  Filter:
-                </div>
+              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
                 {STATUS_TABS.map((tab) => {
-                  const count = tab === 'all'
-                    ? submissions.length
-                    : submissions.filter((s) => s.status === tab).length;
+                  const count =
+                    tab === 'all'
+                      ? submissions.length
+                      : tab === 'finalists'
+                      ? submissions.filter((s) => s.is_finalist).length
+                      : submissions.filter((s) => s.status === tab).length;
                   return (
                     <button
                       key={tab}
                       onClick={() => setSelectedStatus(tab)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all flex items-center gap-1.5 shrink-0 ${
                         selectedStatus === tab
-                          ? 'bg-brand-600 text-white shadow-button'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-[#027B39] text-white'
+                          : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                       }`}
                     >
                       {tab}
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                        selectedStatus === tab ? 'bg-white/20 text-white' : 'bg-white text-slate-500'
-                      }`}>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/10">
                         {count}
                       </span>
                     </button>
@@ -259,19 +307,15 @@ export default function AdminSubmissionsPage() {
           </div>
 
           {/* Table */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+          <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
             {isLoading ? (
-              <div className="p-12 text-center text-sm text-slate-500 flex flex-col items-center gap-3">
-                <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
-                <span>Loading competition submissions...</span>
+              <div className="p-12 text-center text-xs text-neutral-500 flex flex-col items-center gap-3">
+                <RefreshCw className="w-6 h-6 animate-spin text-[#027B39]" />
+                <span>Loading submissions...</span>
               </div>
             ) : filteredSubmissions.length === 0 ? (
-              <div className="p-16 text-center">
-                <div className="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3">
-                  <FileText className="w-7 h-7 text-slate-300" />
-                </div>
-                <p className="text-slate-700 font-semibold mb-1">No submissions found</p>
-                <p className="text-xs text-slate-400">Try adjusting your search or filter</p>
+              <div className="p-12 text-center text-xs text-neutral-500">
+                No submissions matching your filter criteria.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -281,8 +325,9 @@ export default function AdminSubmissionsPage() {
                       <th>Participant</th>
                       <th>School</th>
                       <th>Debate Topic</th>
-                      <th>Submitted</th>
+                      <th>Votes</th>
                       <th>Status</th>
+                      <th>Submitted</th>
                       <th className="text-right">Action</th>
                     </tr>
                   </thead>
@@ -290,19 +335,23 @@ export default function AdminSubmissionsPage() {
                     {filteredSubmissions.map((item) => (
                       <tr key={item.id}>
                         <td>
-                          <span className="font-semibold text-slate-900 block">{item.full_name}</span>
-                          <span className="text-[11px] text-slate-400">{item.email}</span>
+                          <span className="font-bold text-neutral-900 block">{item.full_name}</span>
+                          <span className="text-[11px] text-neutral-500">{item.email}</span>
                         </td>
-                        <td className="text-slate-600">{item.school}</td>
-                        <td className="max-w-xs">
-                          <span className="block truncate text-slate-600">{item.debate_topic}</span>
+                        <td className="text-neutral-700 font-medium">{item.school}</td>
+                        <td className="max-w-xs truncate italic text-neutral-600">&quot;{item.debate_topic}&quot;</td>
+                        <td>
+                          <span className="inline-flex items-center gap-1 text-xs font-extrabold text-[#027B39] bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200">
+                            <ThumbsUp className="w-3 h-3" />
+                            {(item.vote_count || 0).toLocaleString()}
+                          </span>
                         </td>
-                        <td className="whitespace-nowrap text-slate-500">{formatDate(item.created_at)}</td>
-                        <td>{getStatusBadge(item.status)}</td>
+                        <td>{getStatusBadge(item.status, item.is_finalist)}</td>
+                        <td className="whitespace-nowrap text-xs text-neutral-500">{formatDate(item.created_at)}</td>
                         <td className="text-right">
                           <button
                             onClick={() => handleOpenReview(item)}
-                            className="btn-primary text-xs px-4 py-2"
+                            className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 ml-auto"
                           >
                             <Play className="w-3.5 h-3.5" />
                             Review
@@ -315,27 +364,25 @@ export default function AdminSubmissionsPage() {
               </div>
             )}
           </div>
+
         </div>
       </main>
 
-      {/* ====================================================================
-          REVIEW MODAL
-          ==================================================================== */}
+      {/* REVIEW MODAL */}
       {selectedSubmission && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setSelectedSubmission(null); }}>
-          <div className="modal-panel mx-4">
-            {/* Modal header */}
-            <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+          <div className="modal-panel mx-4 my-auto">
+            <div className="sticky top-0 bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
               <div>
-                <p className="text-[11px] font-mono text-slate-400 mb-0.5">ID: {selectedSubmission.id}</p>
-                <h2 className="text-lg font-display font-bold text-slate-900">{selectedSubmission.full_name}</h2>
-                <p className="text-xs text-slate-500">{selectedSubmission.school}</p>
+                <p className="text-[10px] font-mono text-neutral-400">ID: {selectedSubmission.id}</p>
+                <h2 className="text-lg font-bold text-neutral-900">{selectedSubmission.full_name}</h2>
+                <p className="text-xs text-neutral-600 font-medium">{selectedSubmission.school}</p>
               </div>
               <div className="flex items-center gap-3">
-                {getStatusBadge(selectedSubmission.status)}
+                {getStatusBadge(selectedSubmission.status, selectedSubmission.is_finalist)}
                 <button
                   onClick={() => setSelectedSubmission(null)}
-                  className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+                  className="w-8 h-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center text-neutral-500"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -343,72 +390,70 @@ export default function AdminSubmissionsPage() {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Video player */}
+              {/* Video Player */}
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Submitted Video</p>
+                <p className="text-xs font-bold text-neutral-600 uppercase tracking-wider mb-2">Debate Video</p>
                 {signedVideoUrl ? (
-                  <div className="aspect-video bg-brand-950 rounded-xl overflow-hidden shadow-lg">
+                  <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-md">
                     <video controls src={signedVideoUrl} className="w-full h-full object-contain" />
                   </div>
                 ) : (
-                  <div className="aspect-video bg-slate-100 rounded-xl flex flex-col items-center justify-center gap-3 text-slate-400">
-                    <RefreshCw className="w-6 h-6 animate-spin text-brand-400" />
-                    <span className="text-sm">Loading video player...</span>
+                  <div className="aspect-video bg-neutral-100 rounded-xl flex items-center justify-center text-xs text-neutral-500">
+                    <RefreshCw className="w-5 h-5 animate-spin text-[#027B39] mr-2" />
+                    Loading secure stream...
                   </div>
                 )}
               </div>
 
-              {/* Participant details */}
-              <div className="bg-slate-50 rounded-xl border border-slate-100 p-5">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Participant Details</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              {/* Details & Votes */}
+              <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 space-y-3 text-xs">
+                <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+                  <span className="font-bold text-neutral-500 uppercase">Current Public Votes</span>
+                  <span className="text-sm font-extrabold text-[#027B39] flex items-center gap-1">
+                    <ThumbsUp className="w-4 h-4" />
+                    {(selectedSubmission.vote_count || 0).toLocaleString()} votes
+                  </span>
+                </div>
+                <div>
+                  <span className="font-bold text-neutral-500 uppercase block mb-1">Debate Motion</span>
+                  <p className="text-neutral-900 italic font-medium">&quot;{selectedSubmission.debate_topic}&quot;</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-neutral-200">
                   <div>
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">Phone</span>
-                    <span className="font-medium text-slate-900">{selectedSubmission.phone}</span>
+                    <span className="font-bold text-neutral-500 uppercase block">Phone</span>
+                    <span className="text-neutral-800">{selectedSubmission.phone}</span>
                   </div>
                   <div>
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">Email</span>
-                    <span className="font-medium text-slate-900">{selectedSubmission.email}</span>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">Debate Topic</span>
-                    <span className="font-medium text-slate-900">{selectedSubmission.debate_topic}</span>
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">Date Submitted</span>
-                    <span className="font-medium text-slate-900">{formatDate(selectedSubmission.created_at)}</span>
+                    <span className="font-bold text-neutral-500 uppercase block">Email</span>
+                    <span className="text-neutral-800">{selectedSubmission.email}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Status actions */}
-              <div>
-                <p className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Update Status</p>
+              {/* Status Actions */}
+              <div className="space-y-3 pt-2 border-t border-neutral-200">
+                <p className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Review &amp; Status Actions</p>
 
                 {confirmRejectId ? (
-                  <div className="confirm-dialog">
-                    <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-amber-900 mb-1">Confirm Rejection?</p>
-                      <p className="text-xs text-slate-600 mb-3">
-                        This entry will be rejected and will not appear in the public gallery.
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleStatusChange('rejected')}
-                          disabled={isUpdatingStatus}
-                          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs disabled:opacity-50 transition-colors"
-                        >
-                          {isUpdatingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin inline mr-1" /> : null}
-                          Confirm Reject
-                        </button>
-                        <button
-                          onClick={() => setConfirmRejectId(null)}
-                          className="px-4 py-2 border border-slate-200 text-slate-700 font-semibold rounded-lg text-xs hover:bg-slate-50 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-3">
+                    <div className="flex items-center gap-2 text-amber-900 font-bold">
+                      <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      <span>Confirm Rejection of this Submission?</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleStatusChange('rejected')}
+                        disabled={isUpdatingStatus}
+                        className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs"
+                      >
+                        Confirm Reject
+                      </button>
+                      <button
+                        onClick={() => setConfirmRejectId(null)}
+                        className="px-4 py-2 bg-white border border-neutral-300 text-neutral-700 font-bold rounded-lg text-xs"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -416,30 +461,48 @@ export default function AdminSubmissionsPage() {
                     <button
                       onClick={() => handleStatusChange('approved')}
                       disabled={isUpdatingStatus || selectedSubmission.status === 'approved'}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors"
+                      className="btn-primary text-xs py-2.5 px-4 flex items-center gap-1.5"
                     >
-                      {isUpdatingStatus ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                      Approve for Gallery
+                      <CheckCircle2 className="w-4 h-4" />
+                      Approve Entry
                     </button>
+
+                    {selectedSubmission.status === 'approved' && (
+                      <button
+                        onClick={() => handleToggleFinalist(!selectedSubmission.is_finalist)}
+                        disabled={isUpdatingStatus}
+                        className={`text-xs font-bold py-2.5 px-4 rounded-lg flex items-center gap-1.5 transition-colors ${
+                          selectedSubmission.is_finalist
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
+                            : 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm'
+                        }`}
+                      >
+                        <Trophy className="w-4 h-4" />
+                        {selectedSubmission.is_finalist ? 'Remove Finalist Status' : 'Mark as Grand Finale Finalist'}
+                      </button>
+                    )}
+
                     <button
                       onClick={() => setConfirmRejectId(selectedSubmission.id)}
                       disabled={isUpdatingStatus || selectedSubmission.status === 'rejected'}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors"
+                      className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg flex items-center gap-1.5 transition-colors"
                     >
                       <XCircle className="w-4 h-4" />
-                      Reject
+                      Reject Entry
                     </button>
+
                     <button
                       onClick={() => handleStatusChange('hidden')}
                       disabled={isUpdatingStatus || selectedSubmission.status === 'hidden'}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-slate-700 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors"
+                      className="bg-neutral-700 hover:bg-neutral-800 text-white text-xs font-bold py-2.5 px-4 rounded-lg flex items-center gap-1.5 transition-colors"
                     >
                       <EyeOff className="w-4 h-4" />
-                      Hide
+                      Hide Entry
                     </button>
                   </div>
                 )}
               </div>
+
             </div>
           </div>
         </div>

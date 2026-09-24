@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import DebaterCard from '@/components/DebaterCard';
 import { createClient } from '@/lib/supabase/client';
-import { formatDate } from '@/lib/utils/formatters';
-import { Search, Play, ArrowLeft, RefreshCw, CheckCircle2, Trophy, Users, Mic2, Filter } from 'lucide-react';
+import { Search, Trophy, ThumbsUp, Sparkles, Filter, RefreshCw, Video } from 'lucide-react';
 
 interface ApprovedSubmission {
   id: string;
@@ -12,6 +14,10 @@ interface ApprovedSubmission {
   school: string;
   debate_topic: string;
   video_path: string;
+  vote_count: number;
+  is_finalist: boolean;
+  finalist_rank: number | null;
+  slug: string | null;
   created_at: string;
 }
 
@@ -19,213 +25,180 @@ export default function PublicGalleryPage() {
   const [items, setItems] = useState<ApprovedSubmission[]>([]);
   const [filteredItems, setFilteredItems] = useState<ApprovedSubmission[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'top' | 'finalists'>('all');
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchGallery = useCallback(async () => {
     setIsLoading(true);
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from('public_approved_submissions')
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from('public_approved_submissions') as any)
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('vote_count', { ascending: false });
 
-    if (!error && data) setItems(data as ApprovedSubmission[]);
+    if (!error && data) {
+      setItems(data as ApprovedSubmission[]);
+    }
     setIsLoading(false);
   }, []);
 
-  useEffect(() => { fetchGallery(); }, [fetchGallery]);
+  useEffect(() => {
+    fetchGallery();
+  }, [fetchGallery]);
 
   useEffect(() => {
-    if (!searchQuery.trim()) { setFilteredItems(items); return; }
-    const q = searchQuery.toLowerCase();
-    setFilteredItems(
-      items.filter(
+    let result = [...items];
+
+    // Tab Filter
+    if (activeTab === 'finalists') {
+      result = result.filter((item) => item.is_finalist);
+    } else if (activeTab === 'top') {
+      result = result.sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0));
+    }
+
+    // Search Query Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
         (item) =>
           item.full_name.toLowerCase().includes(q) ||
           item.school.toLowerCase().includes(q) ||
           item.debate_topic.toLowerCase().includes(q)
-      )
-    );
-  }, [items, searchQuery]);
+      );
+    }
+
+    setFilteredItems(result);
+  }, [items, searchQuery, activeTab]);
 
   return (
-    <main className="min-h-screen bg-[#f8f9fc]">
-      {/* Page Header */}
-      <div className="bg-white border-b border-emerald-900/10 sticky top-0 z-20 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 hover:text-emerald-600 transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Home
-            </Link>
-            <div className="w-px h-6 bg-emerald-900/15" />
-            <Link href="/" className="flex items-center gap-3">
-              <img src="/eygii-logo.png" alt="EYGII Logo" className="h-10 object-contain" />
-              <div className="hidden md:block text-left">
-                <span className="block text-xs font-black text-emerald-900 uppercase tracking-tight">EYGII — IBETC 2026</span>
-                <span className="block text-[10px] text-emerald-700 italic">Reviving world integrity and moral values</span>
-              </div>
-            </Link>
-          </div>
+    <div className="min-h-screen flex flex-col bg-[#f8faf7]">
+      <Navbar />
 
-          <div className="flex items-center gap-3">
-            <span className="badge badge-approved hidden sm:inline-flex bg-emerald-100 text-emerald-900 border-emerald-300">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              Live Gallery
-            </span>
+      <main className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-8">
+        
+        {/* Header Title Section */}
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <Trophy className="w-3.5 h-3.5 text-[#027B39]" />
+            BATTLE OF WITS &amp; WORDS
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-black text-neutral-900 tracking-tight">
+            Meet the Debaters
+          </h1>
+          <p className="text-sm text-neutral-600 leading-relaxed">
+            Discover student debaters from secondary schools across Oyo State. Watch their debate performances and cast your vote!
+          </p>
+        </div>
+
+        {/* Filter Controls Bar */}
+        <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          
+          {/* Tabs */}
+          <div className="flex items-center bg-neutral-100 p-1 rounded-lg w-full sm:w-auto">
             <button
-              onClick={fetchGallery}
-              className="btn-ghost text-xs gap-1.5"
-              title="Refresh gallery"
+              onClick={() => setActiveTab('all')}
+              className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-md transition-colors ${
+                activeTab === 'all'
+                  ? 'bg-white text-neutral-900 shadow-sm'
+                  : 'text-neutral-600 hover:text-neutral-900'
+              }`}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              All Debaters ({items.length})
+            </button>
+
+            <button
+              onClick={() => setActiveTab('top')}
+              className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+                activeTab === 'top'
+                  ? 'bg-white text-[#027B39] shadow-sm'
+                  : 'text-neutral-600 hover:text-neutral-900'
+              }`}
+            >
+              <ThumbsUp className="w-3.5 h-3.5 text-emerald-600" />
+              Most Voted
+            </button>
+
+            <button
+              onClick={() => setActiveTab('finalists')}
+              className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+                activeTab === 'finalists'
+                  ? 'bg-amber-100 text-amber-900 shadow-sm'
+                  : 'text-neutral-600 hover:text-neutral-900'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-600" />
+              Finalists
             </button>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-12 space-y-10">
-        {/* Hero Section */}
-        <div className="text-center space-y-4">
-          <div className="section-eyebrow mx-auto">
-            <Mic2 className="w-3.5 h-3.5" />
-            Approved Debate Entries
+          {/* Search Box */}
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search debater, school..."
+              className="w-full pl-9 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-medium text-neutral-900 outline-none focus:border-[#027B39] focus:bg-white transition-all"
+            />
           </div>
-          <h1 className="section-title text-4xl sm:text-5xl">Public Debate Gallery</h1>
-          <p className="text-slate-500 max-w-xl mx-auto text-sm">
-            Watch approved youth and teen debate competition entries from schools across Nigeria.
-          </p>
 
-          {/* Stats bar */}
-          {!isLoading && (
-            <div className="flex items-center justify-center gap-6 pt-2 animate-fade-in">
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <Users className="w-4 h-4 text-brand-400" />
-                <span><strong className="text-slate-800">{items.length}</strong> approved {items.length === 1 ? 'entry' : 'entries'}</span>
-              </div>
-              {searchQuery && (
-                <>
-                  <div className="w-px h-4 bg-slate-200" />
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <Filter className="w-3.5 h-3.5 text-brand-400" />
-                    <span><strong className="text-slate-800">{filteredItems.length}</strong> matching</span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* Search Bar */}
-        <div className="max-w-md mx-auto search-bar">
-          <Search className="search-icon w-4 h-4" />
-          <input
-            type="text"
-            id="gallery-search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, school, or topic..."
-          />
-        </div>
-
-        {/* Gallery Grid */}
+        {/* Debater Cards Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-                <div className="aspect-video skeleton" />
-                <div className="p-5 space-y-3">
-                  <div className="skeleton h-3 w-1/2" />
-                  <div className="skeleton h-4 w-3/4" />
-                  <div className="skeleton h-3 w-full" />
-                  <div className="skeleton h-3 w-2/3" />
-                </div>
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <div key={n} className="bg-white rounded-xl border border-neutral-200 p-4 space-y-3 animate-pulse">
+                <div className="aspect-video bg-neutral-200 rounded-lg" />
+                <div className="h-4 bg-neutral-200 rounded w-3/4" />
+                <div className="h-3 bg-neutral-200 rounded w-1/2" />
+                <div className="h-8 bg-neutral-200 rounded w-full mt-4" />
               </div>
             ))}
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-card p-16 text-center">
-            <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
-              <Mic2 className="w-8 h-8 text-slate-300" />
-            </div>
-            <p className="text-slate-800 font-semibold mb-1">
-              {searchQuery ? 'No matches found' : 'No entries yet'}
-            </p>
-            <p className="text-xs text-slate-400">
+          <div className="bg-white rounded-2xl border border-dashed border-neutral-300 p-12 text-center space-y-3">
+            <Video className="w-12 h-12 text-neutral-300 mx-auto" />
+            <h3 className="text-base font-bold text-neutral-800">
+              {searchQuery ? 'No debaters matching your search' : 'No approved debaters yet'}
+            </h3>
+            <p className="text-xs text-neutral-500 max-w-sm mx-auto">
               {searchQuery
-                ? 'Try a different search term'
-                : 'Approved debate entries will appear here once the competition begins.'}
+                ? 'Try searching with a different student name or school.'
+                : 'Debater entries will appear here once approved by organizers.'}
             </p>
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="mt-4 btn-ghost text-xs"
+                className="btn-ghost text-xs py-1.5 px-4 inline-flex"
               >
-                Clear search
+                Clear Search Filter
               </button>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map((item, idx) => (
-              <Link
+            {filteredItems.map((item) => (
+              <DebaterCard
                 key={item.id}
-                href={`/gallery/${item.id}`}
-                className="group bg-white rounded-2xl border border-slate-100 shadow-card card-hover overflow-hidden flex flex-col animate-slide-up"
-                style={{ animationDelay: `${idx * 0.05}s` }}
-              >
-                {/* Video thumbnail */}
-                <div className="video-thumbnail rounded-none">
-                  <div className="play-button">
-                    <Play className="w-5 h-5 fill-brand-600 text-brand-600 ml-0.5" />
-                  </div>
-                  {/* School badge overlay */}
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-sm text-white text-[10px] font-semibold max-w-[70%] truncate">
-                    {item.school}
-                  </div>
-                </div>
-
-                {/* Card content */}
-                <div className="p-5 flex-1 flex flex-col gap-3">
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900 leading-tight group-hover:text-brand-600 transition-colors">
-                      {item.full_name}
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">
-                      {item.debate_topic}
-                    </p>
-                  </div>
-
-                  <div className="mt-auto pt-3 border-t border-slate-50 flex items-center justify-between">
-                    <span className="text-[11px] text-slate-400">{formatDate(item.created_at)}</span>
-                    <span className="badge badge-approved">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Approved
-                    </span>
-                  </div>
-                </div>
-              </Link>
+                id={item.id}
+                fullName={item.full_name}
+                school={item.school}
+                debateTopic={item.debate_topic}
+                voteCount={item.vote_count || 0}
+                slug={item.slug}
+                isFinalist={item.is_finalist}
+                finalistRank={item.finalist_rank}
+              />
             ))}
           </div>
         )}
-      </div>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-100 py-8 px-4 mt-12">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-400">
-            © 2026 Eloquent Youth Global Integrity Initiative · IBETC 2026
-          </p>
-          <Link href="/submit" className="btn-primary text-sm px-5 py-2.5">
-            <Mic2 className="w-4 h-4" />
-            Submit Your Entry
-          </Link>
-        </div>
-      </footer>
-    </main>
+      </main>
+
+      <Footer />
+    </div>
   );
 }

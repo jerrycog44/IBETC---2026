@@ -69,6 +69,10 @@ export type Database = {
           status: SubmissionStatus
           owner_user_id: string | null
           participant_key: string
+          vote_count: number
+          is_finalist: boolean
+          finalist_rank: number | null
+          slug: string | null
           created_at: string
           updated_at: string
         }
@@ -83,6 +87,10 @@ export type Database = {
           status?: SubmissionStatus
           owner_user_id?: string | null
           participant_key: string
+          vote_count?: number
+          is_finalist?: boolean
+          finalist_rank?: number | null
+          slug?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -97,8 +105,36 @@ export type Database = {
           status?: SubmissionStatus
           owner_user_id?: string | null
           participant_key?: string
+          vote_count?: number
+          is_finalist?: boolean
+          finalist_rank?: number | null
+          slug?: string | null
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          id: string
+          submission_id: string
+          voter_fingerprint: string
+          ip_address: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          submission_id: string
+          voter_fingerprint: string
+          ip_address?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          submission_id?: string
+          voter_fingerprint?: string
+          ip_address?: string | null
+          created_at?: string
         }
         Relationships: []
       }
@@ -180,6 +216,10 @@ export type Database = {
           school: string
           debate_topic: string
           video_path: string
+          vote_count: number
+          is_finalist: boolean
+          finalist_rank: number | null
+          slug: string | null
           created_at: string
         }
         Relationships: []
@@ -206,9 +246,29 @@ export type Database = {
         Args: Record<string, never>
         Returns: boolean
       }
+      is_voting_open: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
       toggle_judging_lock: {
         Args: { p_open: boolean }
         Returns: boolean
+      }
+      toggle_voting_lock: {
+        Args: { p_open: boolean }
+        Returns: boolean
+      }
+      toggle_finalist: {
+        Args: { p_submission_id: string; p_is_finalist: boolean; p_rank?: number | null }
+        Returns: boolean
+      }
+      cast_vote: {
+        Args: { p_submission_id: string; p_voter_fingerprint: string; p_ip_address?: string | null }
+        Returns: {
+          success: boolean
+          vote_count: number
+          message: string
+        }[]
       }
       create_staff_user: {
         Args: { p_user_id: string; p_full_name: string; p_email: string; p_role: StaffRole }
@@ -222,6 +282,8 @@ export type Database = {
           approved_count: number
           rejected_count: number
           hidden_count: number
+          total_votes: number
+          finalists_count: number
         }[]
       }
       get_submission_by_participant_key: {
@@ -238,6 +300,21 @@ export type Database = {
           owner_user_id: string | null
           created_at: string
           updated_at: string
+        }[]
+      }
+      get_public_entry_by_slug_or_id: {
+        Args: { p_identifier: string }
+        Returns: {
+          id: string
+          full_name: string
+          school: string
+          debate_topic: string
+          video_path: string
+          vote_count: number
+          is_finalist: boolean
+          finalist_rank: number | null
+          slug: string | null
+          created_at: string
         }[]
       }
       associate_submission_with_account: {

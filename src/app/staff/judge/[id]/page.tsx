@@ -1,10 +1,23 @@
 'use client';
 
-import { useState, useEffect, use, useCallback } from 'react';
+import React, { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import VideoPlayer from '@/components/VideoPlayer';
 import { createClient } from '@/lib/supabase/client';
 import { saveJudgeScoresAction } from '@/app/actions/scores';
-import { ArrowLeft, Play, Lock, CheckCircle2, AlertCircle, RefreshCw, Save } from 'lucide-react';
+import {
+  ArrowLeft,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  Save,
+  School,
+  MessageSquare,
+  Award,
+} from 'lucide-react';
 
 interface CriterionItem {
   id: string;
@@ -29,13 +42,12 @@ export default function JudgeScoringPage({
   const { id } = use(params);
 
   const [submission, setSubmission] = useState<SubmissionItem | null>(null);
-  const [signedVideoUrl, setSignedVideoUrl] = useState<string | null>(null);
   const [criteria, setCriteria] = useState<CriterionItem[]>([]);
-  
+
   // Scores state: Map of criterionId -> score number
   const [scores, setScores] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
-  
+
   const [isJudgingOpen, setIsJudgingOpen] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -63,15 +75,6 @@ export default function JudgeScoringPage({
 
     if (subData) {
       setSubmission(subData as SubmissionItem);
-
-      // Fetch signed video URL
-      const res = await fetch(`/api/video/signed-url?submissionId=${id}`);
-      if (res.ok) {
-        const videoData = await res.json();
-        if (videoData.signedUrl) {
-          setSignedVideoUrl(videoData.signedUrl);
-        }
-      }
     }
 
     // 3. Fetch active criteria
@@ -118,7 +121,6 @@ export default function JudgeScoringPage({
       setScores((prev) => ({ ...prev, [criterionId]: 0 }));
       return;
     }
-    // Clamp score between 0 and maxScore
     const clamped = Math.max(0, Math.min(num, maxScore));
     setScores((prev) => ({ ...prev, [criterionId]: clamped }));
   };
@@ -141,7 +143,6 @@ export default function JudgeScoringPage({
       return;
     }
 
-    // Format score payload
     const scoreEntries = criteria.map((c) => ({
       criterionId: c.id,
       score: scores[c.id] || 0,
@@ -159,106 +160,114 @@ export default function JudgeScoringPage({
     }
   };
 
-  // Calculate total evaluation score
   const totalRawScore = criteria.reduce((acc, c) => acc + (scores[c.id] || 0), 0);
-  const totalWeightedScore = criteria.reduce((acc, c) => acc + (scores[c.id] || 0) * (c.weight || 1), 0);
   const maxPossibleScore = criteria.reduce((acc, c) => acc + c.max_score, 0);
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6 sm:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <Link href="/staff/judge" className="inline-flex items-center space-x-1 text-xs text-slate-500 hover:text-slate-900 transition-colors">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Judge Dashboard</span>
+    <div className="min-h-screen flex flex-col bg-[#f8faf7]">
+      <Navbar />
+
+      <main className="flex-1 py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full space-y-6">
+        
+        {/* Navigation Breadcrumb */}
+        <Link
+          href="/staff/judge"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-600 hover:text-[#027B39]"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Judge Queue</span>
         </Link>
 
-        {/* JUDGING LOCK BANNER */}
+        {/* Lock warning */}
         {!isJudgingOpen && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-800 flex items-center space-x-2">
-            <Lock className="w-4 h-4 text-red-600 flex-shrink-0" />
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
+            <Lock className="w-4 h-4 text-rose-600 shrink-0" />
             <span>
-              <strong>Judging Locked:</strong> The organizers have locked judging. Scores cannot be created or edited at this time.
+              <strong>Judging Locked:</strong> The organizers have locked judging. Scores cannot be modified at this time.
             </span>
           </div>
         )}
 
+        {/* Feedback message */}
         {message && (
           <div
-            className={`p-4 rounded-xl text-xs flex items-center space-x-2 border ${
+            className={`p-4 rounded-xl text-xs flex items-center gap-2 border ${
               message.type === 'success'
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : 'bg-red-50 text-red-800 border-red-200'
+                : 'bg-rose-50 text-rose-800 border-rose-200'
             }`}
           >
             {message.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             )}
             <span>{message.text}</span>
           </div>
         )}
 
         {isLoading ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-xs text-slate-500">
-            Loading submission and judging criteria...
+          <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center text-xs text-neutral-500">
+            Loading candidate details &amp; scoring criteria...
           </div>
         ) : !submission ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-xs text-slate-500">
-            Submission not found.
+          <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center text-xs text-neutral-500">
+            Candidate submission not found.
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* LEFT COLUMN: VIDEO PLAYER & METADATA */}
-            <div className="lg:col-span-1 space-y-4">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="aspect-video bg-slate-900 relative">
-                  {signedVideoUrl ? (
-                    <video controls src={signedVideoUrl} className="w-full h-full object-contain" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">
-                      <Play className="w-6 h-6 mr-1" />
-                      <span>Loading video...</span>
-                    </div>
-                  )}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            {/* Left Column: Candidate & Video */}
+            <div className="lg:col-span-5 space-y-6">
+              
+              <div className="bg-white rounded-xl border border-neutral-200 p-5 space-y-4 shadow-sm">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#027B39]">
+                    DEBATER CANDIDATE
+                  </span>
+                  <h1 className="text-xl font-extrabold text-neutral-900">{submission.full_name}</h1>
+                  <p className="text-xs font-semibold text-neutral-600 flex items-center gap-1">
+                    <School className="w-3.5 h-3.5 text-[#027B39]" /> {submission.school}
+                  </p>
                 </div>
 
-                <div className="p-4 space-y-2">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase">Submission #{submission.id.substring(0, 8)}</span>
-                  <h1 className="text-base font-bold text-slate-900 leading-tight">{submission.full_name}</h1>
-                  <p className="text-xs font-semibold text-brand-600">{submission.school}</p>
-                  <div className="pt-2 border-t border-slate-100">
-                    <span className="text-[11px] font-semibold text-slate-400 block uppercase">Debate Topic</span>
-                    <p className="text-xs text-slate-700 leading-relaxed">{submission.debate_topic}</p>
-                  </div>
+                <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 text-xs space-y-1">
+                  <span className="font-bold text-neutral-500 uppercase text-[10px] block">Debate Motion</span>
+                  <p className="italic text-neutral-800">&quot;{submission.debate_topic}&quot;</p>
                 </div>
               </div>
 
-              {/* SCORE SUMMARY CARD */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-2">
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Evaluation Summary</h3>
-                <div className="flex justify-between items-baseline text-xs">
-                  <span className="text-slate-500">Total Score:</span>
-                  <span className="font-mono font-bold text-slate-900 text-sm">
+              {/* Video Player */}
+              <VideoPlayer
+                submissionId={submission.id}
+                posterTitle={`${submission.full_name} — ${submission.school}`}
+              />
+
+              {/* Total Score Summary */}
+              <div className="bg-white rounded-xl border border-neutral-200 p-5 space-y-2 shadow-sm">
+                <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
+                  Total Evaluation Score
+                </h3>
+                <div className="flex justify-between items-center text-sm pt-1">
+                  <span className="text-neutral-600 font-medium">Accumulated Points:</span>
+                  <span className="font-black text-[#027B39] text-xl font-mono">
                     {totalRawScore.toFixed(1)} / {maxPossibleScore}
                   </span>
                 </div>
-                <div className="flex justify-between items-baseline text-xs pt-1 border-t border-slate-100">
-                  <span className="text-slate-500">Weighted Total:</span>
-                  <span className="font-mono font-bold text-brand-600 text-sm">
-                    {totalWeightedScore.toFixed(1)} pts
-                  </span>
-                </div>
               </div>
+
             </div>
 
-            {/* RIGHT COLUMN: CRITERIA SCORING FORM */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
-                <header className="border-b border-slate-100 pb-4">
-                  <h2 className="text-lg font-extrabold text-slate-900">Evaluation Criteria</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">Enter scores and optional notes for each active criterion.</p>
-                </header>
+            {/* Right Column: Scoring Form */}
+            <div className="lg:col-span-7">
+              <div className="bg-white rounded-xl border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-sm">
+                
+                <div className="border-b border-neutral-200 pb-4">
+                  <h2 className="text-lg font-black text-neutral-900">Judging Evaluation Criteria</h2>
+                  <p className="text-xs text-neutral-600 mt-0.5">
+                    Score each active criterion out of its maximum bounds.
+                  </p>
+                </div>
 
                 <form onSubmit={handleSaveScores} className="space-y-6">
                   {criteria.map((c) => {
@@ -266,16 +275,19 @@ export default function JudgeScoringPage({
                     const currentNotes = notes[c.id] ?? '';
 
                     return (
-                      <div key={c.id} className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-3">
+                      <div key={c.id} className="p-4 bg-neutral-50 rounded-xl border border-neutral-200 space-y-3">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div>
-                            <h3 className="text-xs font-bold text-slate-900">{c.name}</h3>
+                            <h3 className="text-xs font-extrabold text-neutral-900">{c.name}</h3>
                             {c.description && (
-                              <p className="text-[11px] text-slate-500 mt-0.5">{c.description}</p>
+                              <p className="text-[11px] text-neutral-600 mt-0.5">{c.description}</p>
                             )}
                           </div>
-                          <div className="flex items-center space-x-1.5 self-start sm:self-auto">
-                            <span className="text-xs font-semibold text-slate-400">Score (Max {c.max_score}):</span>
+
+                          <div className="flex items-center gap-2 self-start sm:self-auto">
+                            <span className="text-xs font-bold text-neutral-600">
+                              Score (Max {c.max_score}):
+                            </span>
                             <input
                               type="number"
                               min="0"
@@ -284,23 +296,22 @@ export default function JudgeScoringPage({
                               disabled={!isJudgingOpen}
                               value={currentScore}
                               onChange={(e) => handleScoreChange(c.id, e.target.value, c.max_score)}
-                              className="w-20 rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                              className="w-20 px-3 py-1.5 bg-white border border-neutral-300 rounded-lg text-xs font-mono font-bold text-neutral-900 outline-none focus:border-[#027B39]"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label htmlFor={`notes-${c.id}`} className="block text-[11px] font-semibold text-slate-400 mb-1">
-                            Judge Notes (Optional)
+                          <label className="block text-[11px] font-bold text-neutral-500 mb-1">
+                            Judge Notes &amp; Observations (Optional)
                           </label>
                           <textarea
-                            id={`notes-${c.id}`}
                             rows={2}
                             disabled={!isJudgingOpen}
                             value={currentNotes}
                             onChange={(e) => handleNotesChange(c.id, e.target.value)}
-                            placeholder="Add evaluation notes or feedback..."
-                            className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                            placeholder="Add evaluation comments..."
+                            className="w-full p-2.5 bg-white border border-neutral-300 rounded-lg text-xs font-medium text-neutral-900 outline-none focus:border-[#027B39]"
                           />
                         </div>
                       </div>
@@ -311,7 +322,7 @@ export default function JudgeScoringPage({
                     <button
                       type="submit"
                       disabled={!isJudgingOpen || isSaving}
-                      className="w-full py-3 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors flex items-center justify-center space-x-1.5"
+                      className="btn-primary w-full py-3 text-xs uppercase tracking-wider font-bold flex items-center justify-center gap-2 shadow-md"
                     >
                       {isSaving ? (
                         <>
@@ -327,11 +338,16 @@ export default function JudgeScoringPage({
                     </button>
                   </div>
                 </form>
+
               </div>
             </div>
+
           </div>
         )}
-      </div>
-    </main>
+
+      </main>
+
+      <Footer />
+    </div>
   );
 }

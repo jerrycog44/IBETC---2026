@@ -49,6 +49,14 @@ export async function createSubmissionAction(input: CreateSubmissionInput) {
     };
   }
 
+  // Generate friendly slug
+  const baseSlug = `${fullName.trim()}-${school.trim()}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  const randomSuffix = Math.random().toString(36).substring(2, 7);
+  const slug = `${baseSlug}-${randomSuffix}`;
+
   // Insert submission
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: newSubmission, error } = await (supabase.from('submissions') as any)
@@ -60,9 +68,10 @@ export async function createSubmissionAction(input: CreateSubmissionInput) {
       debate_topic: debateTopic.trim(),
       video_path: videoPath,
       participant_key: participantKey,
+      slug: slug,
       status: 'pending',
     })
-    .select('id, full_name, school, debate_topic, created_at')
+    .select('id, full_name, school, debate_topic, slug, created_at')
     .single();
 
   if (error || !newSubmission) {
@@ -79,6 +88,7 @@ export async function createSubmissionAction(input: CreateSubmissionInput) {
       fullName: newSubmission.full_name,
       school: newSubmission.school,
       debateTopic: newSubmission.debate_topic,
+      slug: newSubmission.slug || newSubmission.id,
       createdAt: newSubmission.created_at,
       participantKey: participantKey,
     },
