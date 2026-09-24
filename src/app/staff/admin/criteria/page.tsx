@@ -1,11 +1,25 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { createCriterionAction, updateCriterionAction } from '@/app/actions/criteria';
 import { toggleJudgingLockAction } from '@/app/actions/scores';
-import { Sliders, Plus, Lock, Unlock, ArrowLeft, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  Sliders,
+  Plus,
+  Lock,
+  Unlock,
+  ArrowLeft,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
+  BarChart2,
+  FileText,
+  Users,
+  LogOut,
+  ShieldAlert,
+} from 'lucide-react';
 
 interface CriterionItem {
   id: string;
@@ -23,7 +37,7 @@ export default function AdminJudgingCriteriaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
-  // New Criterion Form State
+  // Form State
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [maxScore, setMaxScore] = useState<number>(20);
@@ -120,7 +134,7 @@ export default function AdminJudgingCriteriaPage() {
       setIsJudgingOpen(nextState);
       setMessage({
         type: 'success',
-        text: nextState ? 'Judging is now OPEN.' : 'Judging is now LOCKED.',
+        text: nextState ? 'Judging lock is now OPEN.' : 'Judging is now LOCKED.',
       });
     } else {
       setMessage({ type: 'error', text: res.error || 'Failed to toggle judging lock.' });
@@ -128,251 +142,281 @@ export default function AdminJudgingCriteriaPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6 sm:p-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div>
-          <Link href="/staff/admin" className="inline-flex items-center space-x-1 text-xs text-slate-500 hover:text-slate-900 mb-2 transition-colors">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Admin Overview</span>
+    <div className="flex min-h-screen bg-[#f8faf7]">
+      {/* SIDEBAR */}
+      <aside className="w-64 bg-[#031c0e] text-white p-6 hidden lg:flex flex-col border-r border-brand-600/30">
+        <div className="pb-6 border-b border-brand-600/20 mb-6">
+          <Link href="/" className="flex items-center gap-3">
+            <img src="/eygii-logo.png" alt="EYGII Logo" className="h-10 bg-white rounded p-1 object-contain" />
+            <div>
+              <p className="text-xs font-black text-white uppercase tracking-tight font-display">EYGII Admin</p>
+              <p className="text-[10px] text-emerald-400 italic">IBETC 2026</p>
+            </div>
           </Link>
-          <h1 className="text-2xl font-extrabold text-slate-900">Judging Criteria & System Controls</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Configure competition evaluation metrics and control judging lock state.</p>
+        </div>
+        <nav className="flex-1 space-y-1 text-sm font-semibold">
+          <Link href="/staff/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
+            <BarChart2 className="w-4 h-4" />
+            Dashboard Overview
+          </Link>
+          <Link href="/staff/admin/submissions" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
+            <FileText className="w-4 h-4" />
+            Submissions &amp; Votes
+          </Link>
+          <Link href="/staff/admin/staff" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
+            <Users className="w-4 h-4" />
+            Staff &amp; Judges
+          </Link>
+          <Link href="/staff/admin/criteria" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#027B39] text-white">
+            <Sliders className="w-4 h-4" />
+            Judging Criteria
+          </Link>
+        </nav>
+        <div className="pt-4 border-t border-brand-600/20">
+          <Link href="/" className="flex items-center gap-2 text-xs font-bold text-neutral-400 hover:text-white px-3 py-2">
+            <LogOut className="w-4 h-4" />
+            Exit Admin Portal
+          </Link>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT */}
+      <main className="flex-1 p-6 sm:p-8 min-w-0">
+        <div className="lg:hidden mb-4">
+          <Link href="/staff/admin" className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-600">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to Dashboard
+          </Link>
         </div>
 
-        {message && (
-          <div
-            className={`p-4 rounded-xl text-xs flex items-center space-x-2 border ${
-              message.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : 'bg-red-50 text-red-800 border-red-200'
-            }`}
-          >
-            {message.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-            )}
-            <span>{message.text}</span>
-          </div>
-        )}
-
-        {!isLoading && !isSuperAdmin ? (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center max-w-lg mx-auto space-y-3">
-            <AlertCircle className="w-10 h-10 text-amber-600 mx-auto" />
-            <h2 className="text-base font-bold text-amber-900">Super Admin Privileges Required</h2>
-            <p className="text-xs text-amber-800">
-              Only authorized Super Administrators can configure criteria or toggle judging lock state.
+        <div className="max-w-5xl space-y-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">Judging Criteria &amp; Controls</h1>
+            <p className="text-xs sm:text-sm text-neutral-600 mt-1">
+              Configure evaluation criteria, maximum bounds, weights, and lock judging during live evaluation.
             </p>
           </div>
-        ) : (
-          <>
-            {/* JUDGING LOCK CONTROL CARD */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center space-x-1 ${
-                      isJudgingOpen
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        : 'bg-red-100 text-red-800 border border-red-200'
-                    }`}
-                  >
-                    {isJudgingOpen ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                    <span>Judging Status: {isJudgingOpen ? 'OPEN' : 'LOCKED'}</span>
-                  </span>
+
+          {message && (
+            <div
+              className={`p-4 rounded-xl flex items-center gap-3 border text-xs font-bold ${
+                message.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  : 'bg-rose-50 text-rose-800 border-rose-200'
+              }`}
+            >
+              {message.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-[#027B39] shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              )}
+              <span>{message.text}</span>
+            </div>
+          )}
+
+          {!isLoading && !isSuperAdmin ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-10 text-center max-w-md mx-auto space-y-3">
+              <ShieldAlert className="w-10 h-10 text-amber-600 mx-auto" />
+              <h2 className="text-base font-bold text-amber-900">Super Admin Privileges Required</h2>
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Only authorized Super Administrators can configure criteria or toggle the judging lock state.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Lock Control Card */}
+              <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-[#027B39]">
+                      JUDGING LOCK CONTROL
+                    </span>
+                    <span className={`badge ${isJudgingOpen ? 'badge-approved' : 'badge-rejected'}`}>
+                      {isJudgingOpen ? 'JUDGING UNLOCKED' : 'JUDGING LOCKED'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-600">
+                    {isJudgingOpen
+                      ? 'Judges can submit and edit score evaluations.'
+                      : 'Judging is locked. Score entries cannot be added or edited by judges.'}
+                  </p>
                 </div>
-                <h2 className="text-base font-bold text-slate-900">Global Judging Lock System</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {isJudgingOpen
-                    ? 'Judges can currently view assigned entries and submit or edit scores.'
-                    : 'Judging is locked. Judges cannot submit new scores or modify existing scores.'}
-                </p>
+
+                <button
+                  type="button"
+                  onClick={handleToggleLock}
+                  className={`btn-primary text-xs py-2.5 px-5 flex items-center gap-2 ${
+                    isJudgingOpen ? 'bg-amber-700 hover:bg-amber-800 border-amber-700' : 'bg-[#027B39]'
+                  }`}
+                >
+                  {isJudgingOpen ? (
+                    <>
+                      <Lock className="w-4 h-4" />
+                      <span>Lock Judging</span>
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="w-4 h-4" />
+                      <span>Unlock Judging</span>
+                    </>
+                  )}
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={handleToggleLock}
-                className={`px-4 py-2.5 rounded-xl text-xs font-semibold text-white shadow-sm transition-colors flex items-center space-x-1.5 flex-shrink-0 ${
-                  isJudgingOpen
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-emerald-600 hover:bg-emerald-700'
-                }`}
-              >
-                {isJudgingOpen ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                <span>{isJudgingOpen ? 'Lock Judging' : 'Unlock Judging'}</span>
-              </button>
-            </div>
-
-            {/* CREATE CRITERION FORM */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
-              <h2 className="text-base font-bold text-slate-900 flex items-center space-x-2">
-                <Plus className="w-5 h-5 text-brand-600" />
-                <span>Add Judging Criterion</span>
-              </h2>
-              <p className="text-xs text-slate-500">
-                Configure official evaluation criteria for IBETC 2026 judges.
-              </p>
-
-              <form onSubmit={handleCreateCriterion} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2">
-                  <label htmlFor="name" className="block text-xs font-semibold text-slate-700 mb-1">
-                    Criterion Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Content Quality & Argument Strength"
-                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
+              {/* Add Criterion Form */}
+              <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-6 space-y-4">
+                <div className="flex items-center gap-2 text-sm font-extrabold text-neutral-900">
+                  <Plus className="w-4 h-4 text-[#027B39]" />
+                  <span>Add New Judging Criterion</span>
                 </div>
 
-                <div>
-                  <label htmlFor="displayOrder" className="block text-xs font-semibold text-slate-700 mb-1">
-                    Display Order
-                  </label>
-                  <input
-                    id="displayOrder"
-                    type="number"
-                    value={displayOrder}
-                    onChange={(e) => setDisplayOrder(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
+                <form onSubmit={handleCreateCriterion} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="form-label">
+                      Criterion Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Oratory &amp; Delivery"
+                      className="form-input"
+                    />
+                  </div>
 
-                <div className="sm:col-span-3">
-                  <label htmlFor="description" className="block text-xs font-semibold text-slate-700 mb-1">
-                    Description / Evaluation Guidelines
-                  </label>
-                  <input
-                    id="description"
-                    type="text"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="e.g. Evaluates logical structure, evidence, and clarity of points presented."
-                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
+                  <div>
+                    <label className="form-label">Display Order</label>
+                    <input
+                      type="number"
+                      value={displayOrder}
+                      onChange={(e) => setDisplayOrder(Number(e.target.value))}
+                      className="form-input"
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="maxScore" className="block text-xs font-semibold text-slate-700 mb-1">
-                    Maximum Score <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="maxScore"
-                    type="number"
-                    min="1"
-                    step="0.5"
-                    required
-                    value={maxScore}
-                    onChange={(e) => setMaxScore(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
+                  <div className="sm:col-span-3">
+                    <label className="form-label">Description / Evaluation Guidelines</label>
+                    <input
+                      type="text"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="e.g. Evaluates vocal clarity, tone, confidence, and rhetorical effectiveness."
+                      className="form-input"
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="weight" className="block text-xs font-semibold text-slate-700 mb-1">
-                    Weight Multiplier <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="weight"
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    required
-                    value={weight}
-                    onChange={(e) => setWeight(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
+                  <div>
+                    <label className="form-label">
+                      Max Score <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="0.5"
+                      required
+                      value={maxScore}
+                      onChange={(e) => setMaxScore(Number(e.target.value))}
+                      className="form-input font-mono"
+                    />
+                  </div>
 
-                <div className="flex items-end">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center space-x-1 disabled:opacity-50"
-                  >
-                    {isSubmitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>Add Criterion</span>}
+                  <div>
+                    <label className="form-label">
+                      Weight Multiplier <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      required
+                      value={weight}
+                      onChange={(e) => setWeight(Number(e.target.value))}
+                      className="form-input font-mono"
+                    />
+                  </div>
+
+                  <div className="flex items-end">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="btn-primary text-xs py-3 w-full flex items-center justify-center gap-1.5"
+                    >
+                      {isSubmitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>Add Criterion</span>}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Criteria List */}
+              <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-neutral-600">
+                    Active Criteria ({criteria.length})
+                  </span>
+                  <button onClick={fetchData} className="btn-ghost text-xs flex items-center gap-1.5">
+                    <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                    Refresh
                   </button>
                 </div>
-              </form>
-            </div>
 
-            {/* CRITERIA LIST TABLE */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <header className="p-4 border-b border-slate-100 flex items-center justify-between">
-                <h2 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                  <Sliders className="w-4 h-4 text-brand-600" />
-                  <span>Configured Criteria ({criteria.length})</span>
-                </h2>
-                <button
-                  onClick={fetchData}
-                  className="px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-medium transition-colors"
-                >
-                  Refresh
-                </button>
-              </header>
-
-              {isLoading ? (
-                <div className="p-12 text-center text-xs text-slate-500">Loading criteria...</div>
-              ) : criteria.length === 0 ? (
-                <div className="p-12 text-center text-xs text-slate-500">No judging criteria configured yet.</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-semibold">
-                        <th className="p-4">Order</th>
-                        <th className="p-4">Criterion & Description</th>
-                        <th className="p-4">Max Score</th>
-                        <th className="p-4">Weight</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {criteria.map((c) => (
-                        <tr key={c.id} className="hover:bg-slate-50/50">
-                          <td className="p-4 font-bold text-slate-400">#{c.display_order}</td>
-                          <td className="p-4">
-                            <span className="font-bold text-slate-900 block">{c.name}</span>
-                            {c.description && <span className="text-slate-500 text-[11px] block mt-0.5">{c.description}</span>}
-                          </td>
-                          <td className="p-4 font-mono font-bold text-slate-900">{c.max_score} pts</td>
-                          <td className="p-4 font-mono text-slate-600">{c.weight}x</td>
-                          <td className="p-4">
-                            <span
-                              className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-                                c.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
-                              }`}
-                            >
-                              {c.is_active ? 'Active' : 'Inactive'}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right">
-                            <button
-                              onClick={() => handleToggleActive(c.id, c.is_active)}
-                              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                                c.is_active
-                                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
-                              }`}
-                            >
-                              {c.is_active ? 'Deactivate' : 'Activate'}
-                            </button>
-                          </td>
+                {isLoading ? (
+                  <div className="p-12 text-center text-xs text-neutral-500 flex flex-col items-center gap-2">
+                    <RefreshCw className="w-5 h-5 animate-spin text-[#027B39]" />
+                    <span>Loading criteria...</span>
+                  </div>
+                ) : criteria.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-neutral-500">
+                    No criteria configured yet.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Order</th>
+                          <th>Criterion &amp; Guidelines</th>
+                          <th>Max Score</th>
+                          <th>Weight</th>
+                          <th>Status</th>
+                          <th className="text-right">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </main>
+                      </thead>
+                      <tbody>
+                        {criteria.map((c) => (
+                          <tr key={c.id}>
+                            <td className="font-bold text-neutral-400 font-mono">#{c.display_order}</td>
+                            <td>
+                              <span className="font-bold text-neutral-900 block">{c.name}</span>
+                              {c.description && <span className="text-neutral-500 text-[11px] block mt-0.5">{c.description}</span>}
+                            </td>
+                            <td className="font-mono font-bold text-neutral-900">{c.max_score} pts</td>
+                            <td className="font-mono text-neutral-600">{c.weight}x</td>
+                            <td>
+                              <span className={`badge ${c.is_active ? 'badge-approved' : 'badge-hidden'}`}>
+                                {c.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="text-right">
+                              <button
+                                onClick={() => handleToggleActive(c.id, c.is_active)}
+                                className="btn-ghost text-xs py-1 px-3"
+                              >
+                                {c.is_active ? 'Deactivate' : 'Activate'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+        </div>
+      </main>
+    </div>
   );
 }
