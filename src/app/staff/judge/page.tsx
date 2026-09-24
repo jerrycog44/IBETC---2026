@@ -203,7 +203,7 @@ export default function JudgeDashboardPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Candidate &amp; School</th>
+                    <th>Candidate & School</th>
                     <th>Debate Topic</th>
                     <th>Submitted</th>
                     <th>Evaluation Status</th>

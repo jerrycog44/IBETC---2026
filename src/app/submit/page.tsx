@@ -312,7 +312,7 @@ export default function SubmitPage() {
         {/* Header Title */}
         <div className="text-center space-y-2">
           <span className="text-xs font-extrabold text-[#027B39] uppercase tracking-wider">
-            BATTLE OF WITS &amp; WORDS — OYO DEBATERS
+            BATTLE OF WITS & WORDS — OYO DEBATERS
           </span>
           <h1 className="text-3xl font-black text-neutral-900 tracking-tight">
             Submit Debate Video Entry
@@ -465,7 +465,7 @@ export default function SubmitPage() {
             <form onSubmit={handleStep2Next} className="space-y-5">
               <div className="border-b border-neutral-100 pb-3">
                 <h3 className="text-base font-extrabold text-neutral-900">
-                  Step 2: Debate Topic &amp; Motion
+                  Step 2: Debate Topic & Motion
                 </h3>
                 <p className="text-xs text-neutral-500">
                   Enter the specific debate topic or motion you address in your video.
@@ -600,7 +600,7 @@ export default function SubmitPage() {
             <div className="space-y-6">
               <div className="border-b border-neutral-100 pb-3">
                 <h3 className="text-base font-extrabold text-neutral-900">
-                  Step 4: Review Details &amp; Submit
+                  Step 4: Review Details & Submit
                 </h3>
                 <p className="text-xs text-neutral-500">
                   Please verify your information before submitting to organizers.
@@ -617,7 +617,7 @@ export default function SubmitPage() {
                   <span className="font-semibold text-neutral-800">{school}</span>
                 </div>
                 <div className="p-3.5 flex justify-between">
-                  <span className="font-bold text-neutral-500 uppercase">Phone &amp; Email</span>
+                  <span className="font-bold text-neutral-500 uppercase">Phone & Email</span>
                   <span className="font-medium text-neutral-800">{phone} · {email}</span>
                 </div>
                 <div className="p-3.5 flex justify-between">
@@ -671,7 +671,7 @@ export default function SubmitPage() {
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Confirm &amp; Submit Entry</span>
+                      <span>Confirm & Submit Entry</span>
                     </>
                   )}
                 </button>

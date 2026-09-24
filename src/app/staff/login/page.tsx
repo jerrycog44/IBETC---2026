@@ -85,7 +85,7 @@ export default function StaffLoginPage() {
               EYGII Staff Portal
             </h1>
             <p className="text-xs text-neutral-600 font-medium">
-              Authorized Competition Administrators &amp; Judges
+              Authorized Competition Administrators & Judges
             </p>
           </div>
 

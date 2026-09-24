@@ -208,11 +208,11 @@ export default function AdminSubmissionsPage() {
           </Link>
           <Link href="/staff/admin/submissions" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#027B39] text-white">
             <FileText className="w-4 h-4" />
-            Submissions &amp; Votes
+            Submissions & Votes
           </Link>
           <Link href="/staff/admin/staff" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
             <Users className="w-4 h-4" />
-            Staff &amp; Judges
+            Staff & Judges
           </Link>
           <Link href="/staff/admin/criteria" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
             <Sliders className="w-4 h-4" />
@@ -241,7 +241,7 @@ export default function AdminSubmissionsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">
-                Submissions &amp; Voting Management
+                Submissions & Voting Management
               </h1>
               <p className="text-xs sm:text-sm text-neutral-600 mt-1">
                 Review entries, inspect votes, approve debaters, and assign Grand Finale finalists.
@@ -432,7 +432,7 @@ export default function AdminSubmissionsPage() {
 
               {/* Status Actions */}
               <div className="space-y-3 pt-2 border-t border-neutral-200">
-                <p className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Review &amp; Status Actions</p>
+                <p className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Review & Status Actions</p>
 
                 {confirmRejectId ? (
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-3">

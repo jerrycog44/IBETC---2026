@@ -113,11 +113,11 @@ export default async function AdminDashboardPage() {
           </Link>
           <Link href="/staff/admin/submissions" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 hover:text-white transition-colors">
             <FileText className="w-4 h-4" />
-            Submissions &amp; Votes
+            Submissions & Votes
           </Link>
           <Link href="/staff/admin/staff" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 hover:text-white transition-colors">
             <Users className="w-4 h-4" />
-            Staff &amp; Judges
+            Staff & Judges
           </Link>
           <Link href="/staff/admin/criteria" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 hover:text-white transition-colors">
             <Sliders className="w-4 h-4" />
@@ -262,7 +262,7 @@ export default async function AdminDashboardPage() {
                   <FileText className="w-6 h-6" />
                 </div>
                 <h3 className="text-base font-extrabold text-neutral-900 group-hover:text-[#027B39]">
-                  Submissions &amp; Voting
+                  Submissions & Voting
                 </h3>
                 <p className="text-xs text-neutral-600 leading-relaxed">
                   Review student entries, play videos, approve entries, inspect vote counts, and manage finalists.
@@ -281,7 +281,7 @@ export default async function AdminDashboardPage() {
                   <Users className="w-6 h-6" />
                 </div>
                 <h3 className="text-base font-extrabold text-neutral-900 group-hover:text-[#027B39]">
-                  Staff &amp; Judges
+                  Staff & Judges
                 </h3>
                 <p className="text-xs text-neutral-600 leading-relaxed">
                   Manage organizer staff roles, assign super admins, admins, and panel judges.

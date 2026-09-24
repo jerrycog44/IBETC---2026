@@ -265,7 +265,7 @@ export default function SubmissionStatusPage({
                 <span className="font-semibold text-neutral-900 italic max-w-xs text-right">&quot;{submission.debate_topic}&quot;</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="font-bold text-neutral-500 uppercase">Phone &amp; Email</span>
+                <span className="font-bold text-neutral-500 uppercase">Phone & Email</span>
                 <span className="font-semibold text-neutral-900">{submission.phone} · {submission.email}</span>
               </div>
               <div className="py-2.5 flex justify-between">

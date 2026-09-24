@@ -81,7 +81,7 @@ export default function PublicGalleryPage() {
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
             <Trophy className="w-3.5 h-3.5 text-[#027B39]" />
-            BATTLE OF WITS &amp; WORDS
+            BATTLE OF WITS & WORDS
           </span>
           <h1 className="text-3xl sm:text-4xl font-black text-neutral-900 tracking-tight">
             Meet the Debaters

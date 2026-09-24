@@ -208,7 +208,7 @@ export default function JudgeScoringPage({
 
         {isLoading ? (
           <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center text-xs text-neutral-500">
-            Loading candidate details &amp; scoring criteria...
+            Loading candidate details & scoring criteria...
           </div>
         ) : !submission ? (
           <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center text-xs text-neutral-500">
@@ -303,7 +303,7 @@ export default function JudgeScoringPage({
 
                         <div>
                           <label className="block text-[11px] font-bold text-neutral-500 mb-1">
-                            Judge Notes &amp; Observations (Optional)
+                            Judge Notes & Observations (Optional)
                           </label>
                           <textarea
                             rows={2}

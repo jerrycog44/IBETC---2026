@@ -127,11 +127,11 @@ export default function AdminStaffUsersPage() {
           </Link>
           <Link href="/staff/admin/submissions" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
             <FileText className="w-4 h-4" />
-            Submissions &amp; Votes
+            Submissions & Votes
           </Link>
           <Link href="/staff/admin/staff" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#027B39] text-white">
             <Users className="w-4 h-4" />
-            Staff &amp; Judges
+            Staff & Judges
           </Link>
           <Link href="/staff/admin/criteria" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
             <Sliders className="w-4 h-4" />
@@ -250,7 +250,7 @@ export default function AdminStaffUsersPage() {
                       className="form-input"
                     >
                       <option value="judge">Judge (Virtual Evaluation)</option>
-                      <option value="admin">Admin (Review &amp; Approvals)</option>
+                      <option value="admin">Admin (Review & Approvals)</option>
                       <option value="super_admin">Super Admin (Full Control)</option>
                     </select>
                   </div>
@@ -303,7 +303,7 @@ export default function AdminStaffUsersPage() {
                     <table className="data-table">
                       <thead>
                         <tr>
-                          <th>Name &amp; Email</th>
+                          <th>Name & Email</th>
                           <th>Role</th>
                           <th>Created</th>
                           <th className="text-right">Change Role</th>

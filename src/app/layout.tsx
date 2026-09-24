@@ -38,7 +38,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased min-h-screen flex flex-col bg-[#f8f9fc] text-slate-900">
+      <body className="antialiased min-h-screen flex flex-col bg-[#f8faf7] text-slate-900">
         {children}
       </body>
     </html>

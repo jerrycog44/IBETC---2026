@@ -65,10 +65,10 @@ export default async function HomePage() {
                 {/* Main Titles */}
                 <div className="space-y-3">
                   <h2 className="text-emerald-400 text-sm sm:text-base font-extrabold uppercase tracking-widest">
-                    Eloquent Youth &amp; Global Integrity Initiative Presents
+                    Eloquent Youth & Global Integrity Initiative Presents
                   </h2>
                   <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.05]">
-                    BATTLE OF WITS &amp; WORDS
+                    BATTLE OF WITS & WORDS
                   </h1>
                   <p className="text-xl sm:text-2xl font-bold text-amber-400 tracking-tight">
                     OYO DEBATERS 2026
@@ -96,7 +96,7 @@ export default async function HomePage() {
                     className="btn-secondary py-4 px-8 text-sm uppercase tracking-wider flex items-center justify-center gap-3 border border-emerald-500/40"
                   >
                     <ThumbsUp className="w-5 h-5 text-emerald-400" />
-                    <span>EXPLORE DEBATERS &amp; VOTE</span>
+                    <span>EXPLORE DEBATERS & VOTE</span>
                   </Link>
                 </div>
 
@@ -145,7 +145,7 @@ export default async function HomePage() {
                         COMPETITION NAME
                       </span>
                       <p className="text-base font-extrabold text-white mt-0.5">
-                        Battle of Wits &amp; Words: Oyo Debaters
+                        Battle of Wits & Words: Oyo Debaters
                       </p>
                     </div>
 
@@ -154,7 +154,7 @@ export default async function HomePage() {
                         ORGANIZATION
                       </span>
                       <p className="text-sm font-semibold text-emerald-300 mt-0.5">
-                        Eloquent Youth &amp; Global Integrity Initiative (EYGII)
+                        Eloquent Youth & Global Integrity Initiative (EYGII)
                       </p>
                     </div>
 
@@ -290,7 +290,7 @@ export default async function HomePage() {
                   ROUND 1 — ONLINE VOTING
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight mt-1">
-                  Meet the Debaters &amp; Vote
+                  Meet the Debaters & Vote
                 </h2>
                 <p className="text-xs sm:text-sm text-neutral-600 mt-1">
                   Watch student debate performances and cast your vote to support your school.
@@ -437,7 +437,7 @@ export default async function HomePage() {
                 className="object-contain mb-4"
               />
               <h3 className="text-base font-extrabold text-neutral-900">
-                Eloquent Youth &amp; Global Integrity Initiative
+                Eloquent Youth & Global Integrity Initiative
               </h3>
               <p className="text-xs text-[#027B39] font-bold mt-1 uppercase tracking-wider">
                 EYGII Nigeria

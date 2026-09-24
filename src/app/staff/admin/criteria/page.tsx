@@ -161,11 +161,11 @@ export default function AdminJudgingCriteriaPage() {
           </Link>
           <Link href="/staff/admin/submissions" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
             <FileText className="w-4 h-4" />
-            Submissions &amp; Votes
+            Submissions & Votes
           </Link>
           <Link href="/staff/admin/staff" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:bg-white/10 transition-colors">
             <Users className="w-4 h-4" />
-            Staff &amp; Judges
+            Staff & Judges
           </Link>
           <Link href="/staff/admin/criteria" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#027B39] text-white">
             <Sliders className="w-4 h-4" />
@@ -191,7 +191,7 @@ export default function AdminJudgingCriteriaPage() {
 
         <div className="max-w-5xl space-y-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">Judging Criteria &amp; Controls</h1>
+            <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">Judging Criteria & Controls</h1>
             <p className="text-xs sm:text-sm text-neutral-600 mt-1">
               Configure evaluation criteria, maximum bounds, weights, and lock judging during live evaluation.
             </p>
@@ -280,7 +280,7 @@ export default function AdminJudgingCriteriaPage() {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Oratory &amp; Delivery"
+                      placeholder="e.g. Oratory & Delivery"
                       className="form-input"
                     />
                   </div>
@@ -375,7 +375,7 @@ export default function AdminJudgingCriteriaPage() {
                       <thead>
                         <tr>
                           <th>Order</th>
-                          <th>Criterion &amp; Guidelines</th>
+                          <th>Criterion & Guidelines</th>
                           <th>Max Score</th>
                           <th>Weight</th>
                           <th>Status</th>
