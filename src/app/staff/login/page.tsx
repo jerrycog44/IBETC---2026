@@ -26,39 +26,54 @@ export default function StaffLoginPage() {
     }
 
     setIsLoading(true);
-    const supabase = createClient();
 
     try {
+      const supabase = createClient();
+      // [DIAG] Step 1: attempting signInWithPassword
+      console.log('[DIAG] Step 1: calling signInWithPassword');
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
       });
+      // [DIAG] Step 2: result from signInWithPassword
+      console.log('[DIAG] Step 2: authError=', authError, '| user id=', authData?.user?.id ?? null);
 
       if (authError || !authData.user) {
         throw new Error(authError?.message || 'Invalid staff email or password.');
       }
 
+      // [DIAG] Step 3: querying staff_users
+      console.log('[DIAG] Step 3: querying staff_users for id=', authData.user.id);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: staffData, error: staffError } = await (supabase.from('staff_users') as any)
         .select('role')
         .eq('id', authData.user.id)
         .single();
+      // [DIAG] Step 4: result from staff_users query
+      console.log('[DIAG] Step 4: staffError=', staffError, '| staffData=', staffData);
 
       if (staffError || !staffData) {
         await supabase.auth.signOut();
         throw new Error('Access Denied: Account is not registered as authorized staff.');
       }
 
+      // [DIAG] Step 5: role check and push
+      console.log('[DIAG] Step 5: role=', staffData.role, '— calling router.push');
       if (staffData.role === 'judge') {
         router.push('/staff/judge');
       } else {
         router.push('/staff/admin');
       }
-      router.refresh();
+      // [DIAG] Step 6: router.push() returned (navigation initiated)
+      console.log('[DIAG] Step 6: router.push() returned — navigation initiated');
     } catch (err: unknown) {
+      // [DIAG] catch block reached
+      console.log('[DIAG] catch block:', err);
       const msg = err instanceof Error ? err.message : 'Login failed.';
       setErrorMessage(msg);
     } finally {
+      // [DIAG] finally block reached — isLoading will be set to false
+      console.log('[DIAG] finally: setting isLoading=false');
       setIsLoading(false);
     }
   };
