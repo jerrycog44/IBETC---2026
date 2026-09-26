@@ -57,10 +57,15 @@ export async function createSubmissionAction(input: CreateSubmissionInput) {
   const randomSuffix = Math.random().toString(36).substring(2, 7);
   const slug = `${baseSlug}-${randomSuffix}`;
 
+  // Pre-generate submission UUID & metadata server-side
+  const submissionId = crypto.randomUUID();
+  const createdAt = new Date().toISOString();
+
   // Insert submission
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: newSubmission, error } = await (supabase.from('submissions') as any)
+  const { error } = await (supabase.from('submissions') as any)
     .insert({
+      id: submissionId,
       full_name: fullName.trim(),
       school: school.trim(),
       phone: phone.trim(),
@@ -70,11 +75,9 @@ export async function createSubmissionAction(input: CreateSubmissionInput) {
       participant_key: participantKey,
       slug: slug,
       status: 'pending',
-    })
-    .select('id, full_name, school, debate_topic, slug, created_at')
-    .single();
+    });
 
-  if (error || !newSubmission) {
+  if (error) {
     return {
       success: false,
       error: error?.message || 'Failed to save submission. Please try again.',
@@ -84,12 +87,12 @@ export async function createSubmissionAction(input: CreateSubmissionInput) {
   return {
     success: true,
     data: {
-      id: newSubmission.id,
-      fullName: newSubmission.full_name,
-      school: newSubmission.school,
-      debateTopic: newSubmission.debate_topic,
-      slug: newSubmission.slug || newSubmission.id,
-      createdAt: newSubmission.created_at,
+      id: submissionId,
+      fullName: fullName.trim(),
+      school: school.trim(),
+      debateTopic: debateTopic.trim(),
+      slug: slug,
+      createdAt: createdAt,
       participantKey: participantKey,
     },
   };
