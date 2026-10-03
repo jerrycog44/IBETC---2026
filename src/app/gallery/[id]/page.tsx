@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 interface GalleryDetailPageProps {
   params: Promise<{ id: string }>;
 }

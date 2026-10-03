@@ -1,5 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
 import { createClient } from '@/lib/supabase/server';
 import { toggleVotingLockAction } from '@/app/actions/voting';
 import {
