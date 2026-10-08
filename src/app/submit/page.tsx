@@ -131,6 +131,96 @@ export default function SubmitPage() {
     setCurrentStep(4);
   };
 
+  const uploadVideoWithProgress = (file: File, path: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        reject(new Error('Supabase configuration is missing.'));
+        return;
+      }
+
+      const supabase = createClient();
+
+      void (async () => {
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          const accessToken = session?.access_token || supabaseAnonKey;
+          const encodedBucket = encodeURIComponent(CONFIG.STORAGE_BUCKET_VIDEOS);
+          const encodedPath = path
+            .split('/')
+            .map((segment) => encodeURIComponent(segment))
+            .join('/');
+
+          const uploadUrl =
+            `${supabaseUrl.replace(/\\/$/, '')}/storage/v1/object/` +
+            `${encodedBucket}/${encodedPath}`;
+
+          const xhr = new XMLHttpRequest();
+
+          xhr.open('POST', uploadUrl, true);
+          xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+          xhr.setRequestHeader('apikey', supabaseAnonKey);
+          xhr.setRequestHeader('Cache-Control', '3600');
+          xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+          xhr.setRequestHeader('x-upsert', 'false');
+
+          xhr.upload.onprogress = (event) => {
+            if (!event.lengthComputable || event.total <= 0) return;
+
+            const transferProgress = Math.round(
+              (event.loaded / event.total) * 75
+            );
+
+            setUploadProgress(15 + transferProgress);
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+              return;
+            }
+
+            let message = `Video upload failed (${xhr.status}).`;
+
+            try {
+              const response = JSON.parse(xhr.responseText);
+              message =
+                response?.message ||
+                response?.error ||
+                response?.statusCode ||
+                message;
+            } catch {
+              // Keep the fallback message.
+            }
+
+            reject(new Error(String(message)));
+          };
+
+          xhr.onerror = () => {
+            reject(new Error('Network error while uploading the video. Please try again.'));
+          };
+
+          xhr.onabort = () => {
+            reject(new Error('Video upload was cancelled.'));
+          };
+
+          xhr.send(file);
+        } catch (error) {
+          reject(
+            error instanceof Error
+              ? error
+              : new Error('Failed to start video upload.')
+          );
+        }
+      })();
+    });
+  };
+
   const handleSubmit = async () => {
     setErrorMessage(null);
 
@@ -148,14 +238,9 @@ export default function SubmitPage() {
     const videoPath = `submissions/${tempId}/${randomHash}.mp4`;
 
     try {
-      setUploadProgress(40);
-      const { error: uploadError } = await supabase.storage
-        .from(CONFIG.STORAGE_BUCKET_VIDEOS)
-        .upload(videoPath, selectedFile, { cacheControl: '3600', upsert: false });
+      await uploadVideoWithProgress(selectedFile, videoPath);
 
-      if (uploadError) throw new Error(`Video upload failed: ${uploadError.message}`);
-
-      setUploadProgress(75);
+      setUploadProgress(90);
 
       const participantKey = generateParticipantKey();
       const result = await createSubmissionAction({
@@ -169,14 +254,19 @@ export default function SubmitPage() {
       });
 
       if (!result.success || !result.data) {
-        await supabase.storage.from(CONFIG.STORAGE_BUCKET_VIDEOS).remove([videoPath]);
+        await supabase.storage
+          .from(CONFIG.STORAGE_BUCKET_VIDEOS)
+          .remove([videoPath]);
+
         throw new Error(result.error || 'Failed to complete submission.');
       }
 
       setUploadProgress(100);
       setSubmissionResult(result.data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      const msg =
+        err instanceof Error ? err.message : 'An unexpected error occurred.';
+
       setErrorMessage(msg);
       setUploadProgress(0);
     } finally {
