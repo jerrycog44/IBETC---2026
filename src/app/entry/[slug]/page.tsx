@@ -4,7 +4,6 @@ import { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -49,6 +48,26 @@ async function getEntry(slugOrId: string) {
   return null;
 }
 
+async function getEntryStatus(slugOrId: string) {
+  try {
+    const supabase = await createClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc(
+      'get_public_submission_status_by_slug_or_id',
+      { p_identifier: slugOrId }
+    );
+
+    if (!error && data && data.length > 0) {
+      return data[0];
+    }
+  } catch (err) {
+    console.error('[getEntryStatus] Error:', err);
+  }
+
+  return null;
+}
+
 export async function generateMetadata({ params }: EntryPageProps): Promise<Metadata> {
   const { slug } = await params;
   const entry = await getEntry(slug);
@@ -84,7 +103,91 @@ export default async function PublicEntryPage({ params }: EntryPageProps) {
   const entry = await getEntry(slug);
 
   if (!entry) {
-    notFound();
+    const statusEntry = await getEntryStatus(slug);
+
+    if (statusEntry) {
+      const isPending = statusEntry.status === 'pending';
+
+      return (
+        <div className="min-h-screen flex flex-col bg-[#f8faf7]">
+          <Navbar />
+
+          <main className="flex-1 flex items-center justify-center px-4 py-16">
+            <div className="w-full max-w-xl bg-white rounded-2xl border border-neutral-200 shadow-md p-8 sm:p-10 text-center">
+
+              <div className="mx-auto mb-5 w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center">
+                <ShieldCheck className="w-7 h-7 text-[#027B39]" />
+              </div>
+
+              <p className="text-xs font-extrabold text-[#027B39] uppercase tracking-wider mb-3">
+                IBETC 2026 — Battle of Wits & Words
+              </p>
+
+              <h1 className="text-2xl sm:text-3xl font-black text-neutral-900">
+                {isPending ? 'Entry Awaiting Approval' : 'Entry Not Currently Available'}
+              </h1>
+
+              <p className="mt-4 text-sm sm:text-base text-neutral-600 leading-relaxed">
+                {isPending
+                  ? 'This debate entry has been successfully submitted and is currently being reviewed by the organizers. The public voting page will become active once the entry is approved.'
+                  : 'This entry is not currently available for public viewing. Please check the link again later or return to the competition gallery.'}
+              </p>
+
+              {statusEntry.full_name && (
+                <div className="mt-6 rounded-xl bg-neutral-50 border border-neutral-200 p-4">
+                  <p className="font-bold text-neutral-900">
+                    {statusEntry.full_name}
+                  </p>
+
+                  {statusEntry.school && (
+                    <p className="mt-1 text-sm text-neutral-500">
+                      {statusEntry.school}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <Link
+                href="/gallery"
+                className="mt-7 inline-flex items-center justify-center rounded-xl bg-[#027B39] px-5 py-3 text-sm font-bold text-white hover:bg-[#026b31] transition-colors"
+              >
+                Explore All Debaters
+              </Link>
+
+            </div>
+          </main>
+
+          <Footer />
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen flex flex-col bg-[#f8faf7]">
+        <Navbar />
+
+        <main className="flex-1 flex items-center justify-center px-4 py-16">
+          <div className="text-center max-w-md">
+            <h1 className="text-2xl font-black text-neutral-900">
+              Entry Not Found
+            </h1>
+
+            <p className="mt-3 text-sm text-neutral-600">
+              We couldn&apos;t find a competition entry for this link.
+            </p>
+
+            <Link
+              href="/gallery"
+              className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#027B39] px-5 py-3 text-sm font-bold text-white"
+            >
+              Explore All Debaters
+            </Link>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
   }
 
   const supabase = await createClient();
