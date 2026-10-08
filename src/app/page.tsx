@@ -76,7 +76,7 @@ export default async function HomePage() {
                 {/* Main Titles */}
                 <div className="space-y-3">
                   <h2 className="text-emerald-400 text-sm sm:text-base font-extrabold uppercase tracking-widest">
-                    Eloquent Youth & Global Integrity Initiative Presents
+                    EYGII PRESENTS
                   </h2>
                   <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.05]">
                     BATTLE OF WITS & WORDS
@@ -88,7 +88,7 @@ export default async function HomePage() {
 
                 {/* Subtitle / Mission */}
                 <p className="text-base sm:text-lg text-neutral-200 leading-relaxed max-w-2xl font-normal border-l-2 border-[#027B39] pl-4">
-                  An Inter-School Debate Challenge for Secondary Schools in Oyo State. Bringing together the brightest student minds to debate critical national topics, showcase eloquence, and compete for top honors.
+                  An inter-school debate competition empowering young voices across Oyo State.
                 </p>
 
                 {/* Action Strip */}
@@ -107,7 +107,7 @@ export default async function HomePage() {
                     className="btn-secondary py-4 px-8 text-sm uppercase tracking-wider flex items-center justify-center gap-3 border border-emerald-500/40"
                   >
                     <ThumbsUp className="w-5 h-5 text-emerald-400" />
-                    <span>EXPLORE DEBATERS & VOTE</span>
+                    <span>EXPLORE & VOTE</span>
                   </Link>
                 </div>
 
