@@ -22,8 +22,13 @@ export async function createSubmissionAction(input: CreateSubmissionInput) {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!emailRegex.test(email.trim())) {
     return { success: false, error: 'Please enter a valid email address.' };
+  }
+
+  const videoPathRegex = /^submissions\/[0-9a-fA-F-]{36}\/[A-Za-z0-9_-]{12}\.mp4$/;
+  if (!videoPathRegex.test(videoPath.trim())) {
+    return { success: false, error: 'Invalid video upload path.' };
   }
 
   const phoneClean = phone.replace(/[\s\-\(\)\+]/g, '');
