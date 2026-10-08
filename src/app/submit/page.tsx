@@ -283,8 +283,8 @@ export default function SubmitPage() {
     : '';
 
   const handleCopyLink = () => {
-    if (!statusLink) return;
-    navigator.clipboard.writeText(statusLink);
+    if (!publicLink) return;
+    navigator.clipboard.writeText(publicLink);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 3000);
   };
@@ -343,17 +343,17 @@ export default function SubmitPage() {
             {/* Private Management Link Box */}
             <div className="space-y-3 border-t border-neutral-200 pt-6">
               <h3 className="text-sm font-extrabold text-neutral-900">
-                Your Private Participant Management Link
+                Your Public Voting Link
               </h3>
               <p className="text-xs text-neutral-600">
-                Bookmark or copy this link. You will need it to view your review status and manage your entry:
+                Share this link with friends, family, classmates and supporters so they can watch your video and vote for you:
               </p>
               
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   readOnly
-                  value={statusLink}
+                  value={publicLink}
                   className="flex-1 bg-neutral-50 border border-neutral-300 rounded-lg px-3 py-2.5 text-xs font-mono text-neutral-800 truncate outline-none"
                 />
                 <button
