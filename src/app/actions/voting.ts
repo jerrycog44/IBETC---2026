@@ -1,5 +1,6 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 
 export interface CastVoteResult {
@@ -17,13 +18,17 @@ export async function castVoteAction(
   }
 
   const supabase = await createClient();
+  const requestHeaders = await headers();
+  const forwardedFor = requestHeaders.get('x-forwarded-for');
+  const realIp = requestHeaders.get('x-real-ip');
+  const ipAddress = forwardedFor?.split(',')[0]?.trim() || realIp || null;
 
   // Call secure cast_vote RPC function
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any).rpc('cast_vote', {
     p_submission_id: submissionId,
     p_voter_fingerprint: voterFingerprint,
-    p_ip_address: null,
+    p_ip_address: ipAddress,
   });
 
   if (error) {
