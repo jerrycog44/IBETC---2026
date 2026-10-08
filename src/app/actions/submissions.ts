@@ -21,6 +21,17 @@ export async function createSubmissionAction(input: CreateSubmissionInput) {
     return { success: false, error: 'All fields are required.' };
   }
 
+  if (
+    fullName.trim().length > 120 ||
+    school.trim().length > 160 ||
+    phone.trim().length > 30 ||
+    email.trim().length > 254 ||
+    debateTopic.trim().length > 300 ||
+    participantKey.trim().length > 128
+  ) {
+    return { success: false, error: 'One or more fields are too long.' };
+  }
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email.trim())) {
     return { success: false, error: 'Please enter a valid email address.' };
