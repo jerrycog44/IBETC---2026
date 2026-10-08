@@ -157,7 +157,7 @@ export default function SubmitPage() {
             .join('/');
 
           const uploadUrl =
-            `${supabaseUrl.replace(/\\/$/, '')}/storage/v1/object/` +
+            `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/` +
             `${encodedBucket}/${encodedPath}`;
 
           const xhr = new XMLHttpRequest();
