@@ -72,6 +72,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate the stored path before requesting a signed URL.
+    const videoPathRegex = /^submissions\/[0-9a-fA-F-]{36}\/[A-Za-z0-9_-]{12}\.mp4$/;
+    if (!videoPathRegex.test(submission.video_path)) {
+      return NextResponse.json(
+        { error: 'Invalid video path' },
+        { status: 500 }
+      );
+    }
+
     // 2. Generate short-lived (1 hour) signed playback URL
     const { data: signedData, error: signedError } = await supabase.storage
       .from(CONFIG.STORAGE_BUCKET_VIDEOS)
